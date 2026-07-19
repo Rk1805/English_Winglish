@@ -15,14 +15,20 @@ import { Brand } from '@/lib/theme';
 export default function QuizSetupScreen() {
   const router = useRouter();
   const { gu } = useLanguage();
-  const { source, id, title } = useLocalSearchParams<{
-    source: 'topic' | 'exam' | 'random';
+  const { source, id, examId, title } = useLocalSearchParams<{
+    source: 'topic' | 'exam' | 'exam_topic' | 'random';
     id?: string;
+    examId?: string;
     title?: string;
   }>();
 
+  // exam_topic shows the topic's study material; questions are filtered later.
   const filter: MaterialFilter | null =
-    source === 'topic' && id ? { topicId: id } : source === 'exam' && id ? { examId: id } : null;
+    (source === 'topic' || source === 'exam_topic') && id
+      ? { topicId: id }
+      : source === 'exam' && id
+        ? { examId: id }
+        : null;
 
   const { data: material } = useAsyncData(async () => {
     if (!filter) return { videos: [], pdfs: [], notes: [] };
@@ -68,7 +74,13 @@ export default function QuizSetupScreen() {
           onPress={() =>
             router.push({
               pathname: '/quiz',
-              params: { source, id: id ?? '', title: title ?? '', count: set.count },
+              params: {
+                source,
+                id: id ?? '',
+                examId: examId ?? '',
+                title: title ?? '',
+                count: set.count,
+              },
             })
           }>
           <Ionicons name={set.icon} size={22} color={set.count === 'all' ? Brand.navy : Brand.red} />

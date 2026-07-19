@@ -96,6 +96,13 @@ export default function PracticeTab() {
                   {gu ? 'મિનિટ' : 'min'}
                 </Text>
               </View>
+              <Pressable
+                hitSlop={8}
+                onPress={() =>
+                  router.push({ pathname: '/leaderboard/[testId]', params: { testId: item.id } })
+                }>
+                <Ionicons name="trophy" size={20} color={Brand.yellow} />
+              </Pressable>
               <Ionicons name="chevron-forward" size={20} color={Brand.textMuted} />
             </Pressable>
           )}

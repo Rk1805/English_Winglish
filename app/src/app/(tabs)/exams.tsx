@@ -32,12 +32,8 @@ export default function ExamsTab() {
               style={styles.card}
               onPress={() =>
                 router.push({
-                  pathname: '/quiz-setup',
-                  params: {
-                    source: 'exam',
-                    id: item.id,
-                    title: loc(gu, item.name_en, item.name_gu),
-                  },
+                  pathname: '/exam/[id]',
+                  params: { id: item.id, title: loc(gu, item.name_en, item.name_gu) },
                 })
               }>
               <Text style={styles.cardTitle}>{loc(gu, item.name_en, item.name_gu)}</Text>

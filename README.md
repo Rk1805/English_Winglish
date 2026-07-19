@@ -25,6 +25,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_storage.sql` (PDF storage bucket)
    - `supabase/migrations/0003_analytics_and_reports.sql` (usage analytics + in-app question reports)
+   - `supabase/migrations/0004_multi_exam_topics_leaderboard.sql` (multi-exam questions, topics inside exams, mock-test leaderboard)
    - `supabase/seed.sql` (loads all exams + grammar categories/topics + 2 sample questions)
 
 3. In **Authentication → Users**, create the admin user (email + password),

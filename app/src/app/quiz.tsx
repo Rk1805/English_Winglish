@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
 import { ReportButton } from '@/components/report-button';
@@ -21,8 +22,9 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 export default function QuizScreen() {
   const { gu } = useLanguage();
   const params = useLocalSearchParams<{
-    source: 'topic' | 'exam' | 'random';
+    source: 'topic' | 'exam' | 'exam_topic' | 'random';
     id?: string;
+    examId?: string;
     title?: string;
     count?: string;
   }>();
@@ -30,14 +32,16 @@ export default function QuizScreen() {
   const source: QuizSource = useMemo(() => {
     if (params.source === 'topic') return { kind: 'topic', id: params.id ?? '' };
     if (params.source === 'exam') return { kind: 'exam', id: params.id ?? '' };
+    if (params.source === 'exam_topic')
+      return { kind: 'exam_topic', topicId: params.id ?? '', examId: params.examId ?? '' };
     return { kind: 'random' };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.source, params.id]);
+  }, [params.source, params.id, params.examId]);
 
   const limit = params.count === 'all' ? undefined : Number(params.count ?? 20);
   const { data: questions, error } = useAsyncData(
     () => fetchQuestions(source, limit),
-    [params.source, params.id, params.count]
+    [params.source, params.id, params.examId, params.count]
   );
 
   return (
@@ -62,6 +66,7 @@ export default function QuizScreen() {
 }
 
 function Quiz({ questions, gu }: { questions: Question[]; gu: boolean }) {
+  const insets = useSafeAreaInsets();
   const { title } = useLocalSearchParams<{ title?: string }>();
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -135,7 +140,7 @@ function Quiz({ questions, gu }: { questions: Question[]; gu: boolean }) {
           </View>
         )}
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
         {!answered ? (
           <Pressable onPress={next} hitSlop={8}>
             <Text style={styles.skip}>{gu ? 'છોડો' : 'Skip'}</Text>

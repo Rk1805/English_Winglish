@@ -34,7 +34,7 @@ export const sampleQuestions: Question[] = [
   {
     id: 'q1',
     topic_id: 't1',
-    exam_id: null,
+    exam_ids: [],
     year: null,
     question_en: 'Choose the correct noun form: "Honesty is the best ______."',
     question_gu: null,
@@ -49,7 +49,7 @@ export const sampleQuestions: Question[] = [
   {
     id: 'q2',
     topic_id: 't4',
-    exam_id: null,
+    exam_ids: [],
     year: null,
     question_en: 'She ______ to school every day.',
     question_gu: null,
@@ -64,7 +64,7 @@ export const sampleQuestions: Question[] = [
   {
     id: 'q3',
     topic_id: 't5',
-    exam_id: 'e2',
+    exam_ids: ['e2'],
     year: 2022,
     question_en: 'Passive voice of "Ram writes a letter" is:',
     question_gu: null,
@@ -84,7 +84,7 @@ export const sampleQuestions: Question[] = [
   {
     id: 'q4',
     topic_id: 't6',
-    exam_id: 'e4',
+    exam_ids: ['e4'],
     year: 2023,
     question_en: 'Choose the synonym of "Abundant":',
     question_gu: null,
@@ -99,7 +99,7 @@ export const sampleQuestions: Question[] = [
   {
     id: 'q5',
     topic_id: 't2',
-    exam_id: 'e5',
+    exam_ids: ['e5'],
     year: 2021,
     question_en: '______ of the two brothers is intelligent.',
     question_gu: null,

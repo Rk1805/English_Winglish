@@ -22,7 +22,7 @@ export type Topic = {
 export type Question = {
   id: string;
   topic_id: string | null;
-  exam_id: string | null;
+  exam_ids: string[];
   year: number | null;
   question_en: string;
   question_gu: string | null;
@@ -33,6 +33,18 @@ export type Question = {
   explanation_gu: string | null;
   difficulty: 'easy' | 'medium' | 'hard';
   is_premium: boolean;
+};
+
+export type TestScore = {
+  id: string;
+  test_id: string;
+  device_id: string;
+  name: string;
+  correct: number;
+  total: number;
+  accuracy: number;
+  duration_seconds: number;
+  created_at: string;
 };
 
 export type Test = {

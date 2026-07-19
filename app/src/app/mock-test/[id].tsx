@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
 import { ReportButton } from '@/components/report-button';
-import { fetchTestQuestions, fetchTests } from '@/lib/content';
+import { fetchTestQuestions, fetchTests, submitTestScore } from '@/lib/content';
+import { getDeviceId } from '@/lib/device';
 import { saveAttempt } from '@/lib/history';
 import { useLanguage } from '@/lib/language';
 import {
@@ -74,7 +77,14 @@ function TestFlow({ test, questions, gu }: { test: Test; questions: Question[]; 
         />
       )}
       {phase === 'result' && (
-        <TestResult title={title} questions={questions} answers={answers} timeUsed={timeUsed} gu={gu} />
+        <TestResult
+          test={test}
+          title={title}
+          questions={questions}
+          answers={answers}
+          timeUsed={timeUsed}
+          gu={gu}
+        />
       )}
     </>
   );
@@ -140,6 +150,7 @@ function Runner({
   gu: boolean;
   onSubmit: (answers: Record<number, number>, usedSeconds: number) => void;
 }) {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const total = questions.length;
   const totalSeconds = durationMinutes * 60;
@@ -305,7 +316,7 @@ function Runner({
         </Text>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 8 }]}>
         <Pressable
           onPress={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={index === 0}
@@ -335,12 +346,14 @@ function Runner({
 }
 
 function TestResult({
+  test,
   title,
   questions,
   answers,
   timeUsed,
   gu,
 }: {
+  test: Test;
   title: string;
   questions: Question[];
   answers: Record<number, number>;
@@ -391,6 +404,14 @@ function TestResult({
         </View>
       </View>
 
+      <LeaderboardCard
+        testId={test.id}
+        correct={correct}
+        total={total}
+        durationSeconds={timeUsed}
+        gu={gu}
+      />
+
       <Text style={styles.reviewHeading}>{gu ? 'જવાબોની સમીક્ષા' : 'Review answers'}</Text>
       {questions.map((question, i) => {
         const selected = answers[i];
@@ -435,6 +456,105 @@ function TestResult({
         <Text style={styles.submitText}>{gu ? 'હોમ પર જાઓ' : 'Back to Home'}</Text>
       </Pressable>
     </ScrollView>
+  );
+}
+
+/** Join the leaderboard: enter a name once, score is submitted per device. */
+function LeaderboardCard({
+  testId,
+  correct,
+  total,
+  durationSeconds,
+  gu,
+}: {
+  testId: string;
+  correct: number;
+  total: number;
+  durationSeconds: number;
+  gu: boolean;
+}) {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+
+  useEffect(() => {
+    AsyncStorage.getItem('player_name').then((saved) => {
+      if (saved) setName(saved);
+    });
+  }, []);
+
+  async function submit() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setState('sending');
+    try {
+      await AsyncStorage.setItem('player_name', trimmed);
+      const deviceId = await getDeviceId();
+      await submitTestScore({
+        deviceId,
+        testId,
+        name: trimmed,
+        correct,
+        total,
+        durationSeconds,
+      });
+      setState('done');
+    } catch {
+      setState('error');
+    }
+  }
+
+  return (
+    <View style={styles.lbCard}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Ionicons name="trophy" size={20} color={Brand.yellow} />
+        <Text style={styles.lbTitle}>{gu ? 'લીડરબોર્ડ' : 'Leaderboard'}</Text>
+      </View>
+      {state !== 'done' ? (
+        <>
+          <Text style={styles.lbHint}>
+            {gu
+              ? 'તમારું નામ લખો અને લીડરબોર્ડમાં જોડાઓ'
+              : 'Enter your name to join the leaderboard'}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TextInput
+              style={styles.lbInput}
+              placeholder={gu ? 'તમારું નામ' : 'Your name'}
+              placeholderTextColor={Brand.textMuted}
+              value={name}
+              onChangeText={setName}
+              maxLength={30}
+            />
+            <Pressable
+              style={[styles.lbButton, (!name.trim() || state === 'sending') && { opacity: 0.5 }]}
+              disabled={!name.trim() || state === 'sending'}
+              onPress={submit}>
+              <Text style={styles.submitText}>
+                {state === 'sending' ? '…' : gu ? 'જોડાઓ' : 'Join'}
+              </Text>
+            </Pressable>
+          </View>
+          {state === 'error' && (
+            <Text style={{ color: Brand.red, fontSize: 12 }}>
+              {gu ? 'સ્કોર મોકલી શકાયો નહીં — ફરી પ્રયત્ન કરો.' : 'Could not submit — try again.'}
+            </Text>
+          )}
+        </>
+      ) : (
+        <Text style={{ color: Brand.green, fontWeight: '600' }}>
+          ✓ {gu ? 'સ્કોર સબમિટ થયો!' : 'Score submitted!'}
+        </Text>
+      )}
+      <Pressable
+        style={styles.lbViewButton}
+        onPress={() => router.push({ pathname: '/leaderboard/[testId]', params: { testId } })}>
+        <Ionicons name="podium" size={16} color={Brand.navy} />
+        <Text style={{ color: Brand.navy, fontWeight: '700' }}>
+          {gu ? 'લીડરબોર્ડ જુઓ' : 'View Leaderboard'}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -602,6 +722,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignSelf: 'stretch',
     marginTop: 6,
+  },
+  lbCard: {
+    backgroundColor: Brand.card,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Brand.yellow,
+    marginTop: 12,
+    gap: 10,
+  },
+  lbTitle: { fontWeight: '800', color: '#222', fontSize: 16 },
+  lbHint: { color: Brand.textMuted, fontSize: 13 },
+  lbInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Brand.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#222',
+    backgroundColor: '#FAFAFA',
+  },
+  lbButton: {
+    backgroundColor: Brand.red,
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+  },
+  lbViewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: Brand.navy,
+    borderRadius: 10,
+    paddingVertical: 10,
   },
   reviewHeading: { fontSize: 16, fontWeight: '700', color: '#222', marginVertical: 14 },
   reviewCard: {

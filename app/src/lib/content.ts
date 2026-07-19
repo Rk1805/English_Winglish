@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 import { isConfigured, SUPABASE_KEY, SUPABASE_URL } from './env';
-import { Category, Exam, Note, Pdf, Question, shuffle, Test, Topic, Video } from './models';
+import { Category, Exam, Note, Pdf, Question, shuffle, Test, TestScore, Topic, Video } from './models';
 import { sampleCategories, sampleExams, sampleQuestions, sampleTopics } from './sample-data';
 
 let client: SupabaseClient | null = null;
@@ -129,6 +129,57 @@ export async function fetchTestQuestions(testId: string): Promise<Question[]> {
   return raw.map((r) => r.questions).filter(Boolean);
 }
 
+/** Topics the admin assigned to an exam (for the in-exam topic sections). */
+export async function fetchExamTopics(examId: string): Promise<Topic[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  const raw = await rows<{ sort_order: number; topics: Topic }>(
+    supabase
+      .from('exam_topics')
+      .select('sort_order, topics (id, category_id, name_en, name_gu)')
+      .eq('exam_id', examId)
+      .order('sort_order')
+      .returns<{ sort_order: number; topics: Topic }[]>()
+  );
+  return raw.map((r) => r.topics).filter(Boolean);
+}
+
+/** Leaderboard: top scores for a mock test (best per device, kept by the server). */
+export async function fetchLeaderboard(testId: string): Promise<TestScore[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  return rows<TestScore>(
+    supabase
+      .from('test_scores')
+      .select('*')
+      .eq('test_id', testId)
+      .order('correct', { ascending: false })
+      .order('duration_seconds', { ascending: true })
+      .limit(50)
+  );
+}
+
+export async function submitTestScore(params: {
+  deviceId: string;
+  testId: string;
+  name: string;
+  correct: number;
+  total: number;
+  durationSeconds: number;
+}): Promise<void> {
+  const supabase = db();
+  if (!supabase) return;
+  const { error } = await supabase.rpc('submit_test_score', {
+    p_device_id: params.deviceId,
+    p_test_id: params.testId,
+    p_name: params.name,
+    p_correct: params.correct,
+    p_total: params.total,
+    p_duration_seconds: params.durationSeconds,
+  });
+  if (error) throw new Error(error.message);
+}
+
 /** Anonymous "wrong question" report from the app (no login). */
 export async function reportQuestion(questionId: string, message: string, deviceId: string): Promise<void> {
   const supabase = db();
@@ -142,11 +193,12 @@ export async function reportQuestion(questionId: string, message: string, device
 }
 
 const QUESTION_COLUMNS =
-  'id, topic_id, exam_id, year, question_en, question_gu, options_en, options_gu, correct_index, explanation_en, explanation_gu, difficulty, is_premium';
+  'id, topic_id, exam_ids, year, question_en, question_gu, options_en, options_gu, correct_index, explanation_en, explanation_gu, difficulty, is_premium';
 
 export type QuizSource =
   | { kind: 'topic'; id: string }
   | { kind: 'exam'; id: string }
+  | { kind: 'exam_topic'; examId: string; topicId: string }
   | { kind: 'random' };
 
 export async function fetchQuestions(source: QuizSource, limit?: number): Promise<Question[]> {
@@ -154,14 +206,18 @@ export async function fetchQuestions(source: QuizSource, limit?: number): Promis
   if (!supabase) {
     let all = sampleQuestions;
     if (source.kind === 'topic') all = all.filter((q) => q.topic_id === source.id);
-    if (source.kind === 'exam') all = all.filter((q) => q.exam_id === source.id);
+    if (source.kind === 'exam') all = all.filter((q) => q.exam_ids.includes(source.id));
+    if (source.kind === 'exam_topic')
+      all = all.filter((q) => q.topic_id === source.topicId && q.exam_ids.includes(source.examId));
     const shuffled = shuffle(all);
     return limit ? shuffled.slice(0, limit) : shuffled;
   }
 
   let query = supabase.from('questions').select(QUESTION_COLUMNS).eq('is_active', true);
   if (source.kind === 'topic') query = query.eq('topic_id', source.id);
-  if (source.kind === 'exam') query = query.eq('exam_id', source.id);
+  if (source.kind === 'exam') query = query.contains('exam_ids', [source.id]);
+  if (source.kind === 'exam_topic')
+    query = query.eq('topic_id', source.topicId).contains('exam_ids', [source.examId]);
   // Over-fetch then shuffle client-side; move to a SQL random-sample
   // function once the bank grows past a few thousand rows.
   const fetched = await rows<Question>(limit ? query.limit(limit * 3) : query);
