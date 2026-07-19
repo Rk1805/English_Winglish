@@ -7,6 +7,7 @@ import { supabaseBrowser } from "@/lib/supabase";
 
 const NAV = [
   { href: "/", label: "Dashboard" },
+  { href: "/analytics", label: "Analytics" },
   { href: "/questions", label: "Questions" },
   { href: "/tests", label: "Mock Tests" },
   { href: "/exams", label: "Exams" },

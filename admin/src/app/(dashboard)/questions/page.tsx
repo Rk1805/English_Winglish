@@ -44,12 +44,20 @@ export default function QuestionsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Questions</h1>
-        <Link
-          href="/questions/new"
-          className="rounded-md bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"
-        >
-          + Add Question
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/questions/import"
+            className="rounded-md border border-red-600 px-4 py-2 font-semibold text-red-600 hover:bg-red-50"
+          >
+            ⬆ Import Excel
+          </Link>
+          <Link
+            href="/questions/new"
+            className="rounded-md bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"
+          >
+            + Add Question
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-3">

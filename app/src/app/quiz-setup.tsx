@@ -2,9 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useAsyncData } from '@/components/async-view';
+import { MaterialSections } from '@/components/material-sections';
+import { fetchNotes, fetchPdfs, fetchVideos, MaterialFilter } from '@/lib/content';
 import { useLanguage } from '@/lib/language';
 import { Brand } from '@/lib/theme';
 
+/**
+ * Topic / exam hub: study material for the topic (videos, PDFs, notes)
+ * followed by the practice sets.
+ */
 export default function QuizSetupScreen() {
   const router = useRouter();
   const { gu } = useLanguage();
@@ -13,6 +20,23 @@ export default function QuizSetupScreen() {
     id?: string;
     title?: string;
   }>();
+
+  const filter: MaterialFilter | null =
+    source === 'topic' && id ? { topicId: id } : source === 'exam' && id ? { examId: id } : null;
+
+  const { data: material } = useAsyncData(async () => {
+    if (!filter) return { videos: [], pdfs: [], notes: [] };
+    const [videos, pdfs, notes] = await Promise.all([
+      fetchVideos(filter),
+      fetchPdfs(filter),
+      fetchNotes(filter),
+    ]);
+    return { videos, pdfs, notes };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, id]);
+
+  const hasMaterial =
+    !!material && (material.videos.length > 0 || material.pdfs.length > 0 || material.notes.length > 0);
 
   const sets: { label: string; count: string; icon: 'help-circle' | 'shuffle' | 'infinite' }[] = [
     { label: gu ? '૫૦ પ્રશ્નો' : '50 MCQs', count: '50', icon: 'help-circle' },
@@ -25,6 +49,17 @@ export default function QuizSetupScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: title ?? 'Practice' }} />
+
+      {hasMaterial && (
+        <>
+          <Text style={styles.heading}>
+            {gu ? `શીખો — ${title ?? ''}` : `Learn — ${title ?? ''}`}
+          </Text>
+          <MaterialSections videos={material.videos} pdfs={material.pdfs} notes={material.notes} />
+          <View style={styles.divider} />
+        </>
+      )}
+
       <Text style={styles.heading}>{gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}</Text>
       {sets.map((set) => (
         <Pressable
@@ -59,8 +94,9 @@ export default function QuizSetupScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Brand.background },
-  content: { padding: 16, gap: 10 },
+  content: { padding: 16, gap: 10, paddingBottom: 32 },
   heading: { fontSize: 16, fontWeight: '700', color: '#222', marginBottom: 4 },
+  divider: { height: 1, backgroundColor: Brand.border, marginVertical: 10 },
   card: {
     backgroundColor: Brand.card,
     borderRadius: 12,

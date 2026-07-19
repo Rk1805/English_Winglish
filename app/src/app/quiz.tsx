@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
+import { ReportButton } from '@/components/report-button';
 import { fetchQuestions, QuizSource } from '@/lib/content';
+import { saveAttempt } from '@/lib/history';
 import { useLanguage } from '@/lib/language';
 import {
   Question,
@@ -60,9 +62,26 @@ export default function QuizScreen() {
 }
 
 function Quiz({ questions, gu }: { questions: Question[]; gu: boolean }) {
+  const { title } = useLocalSearchParams<{ title?: string }>();
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    if (!finished) return;
+    const attempted = Object.keys(answers).length;
+    const correct = questions.filter((q, i) => answers[i] === q.correct_index).length;
+    saveAttempt({
+      date: new Date().toISOString(),
+      title: title || 'Practice',
+      total: questions.length,
+      correct,
+      wrong: attempted - correct,
+      skipped: questions.length - attempted,
+      accuracy: attempted === 0 ? 0 : Math.round((correct * 100) / attempted),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
 
   if (finished) return <Result questions={questions} answers={answers} gu={gu} />;
 
@@ -202,6 +221,9 @@ function Result({
               </Text>
             )}
             {!!explanation && <Text style={styles.reviewExplanation}>{explanation}</Text>}
+            <View style={{ marginLeft: 28 }}>
+              <ReportButton questionId={question.id} />
+            </View>
           </View>
         );
       })}

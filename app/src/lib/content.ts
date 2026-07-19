@@ -1,12 +1,16 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 import { isConfigured, SUPABASE_KEY, SUPABASE_URL } from './env';
-import { Category, Exam, Question, shuffle, Topic } from './models';
+import { Category, Exam, Note, Pdf, Question, shuffle, Test, Topic, Video } from './models';
 import { sampleCategories, sampleExams, sampleQuestions, sampleTopics } from './sample-data';
 
 let client: SupabaseClient | null = null;
 
 /** Supabase client when configured in env.ts, otherwise null (sample mode). */
+export function getClient(): SupabaseClient | null {
+  return db();
+}
+
 function db(): SupabaseClient | null {
   if (!isConfigured) return null;
   if (!client) {
@@ -50,6 +54,91 @@ export async function fetchTopics(categoryId: string): Promise<Topic[]> {
       .eq('is_active', true)
       .order('sort_order')
   );
+}
+
+/** Optional filter: only material tagged to a topic or an exam. */
+export type MaterialFilter = { topicId?: string; examId?: string };
+
+export async function fetchPdfs(filter?: MaterialFilter): Promise<Pdf[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  let query = supabase
+    .from('pdfs')
+    .select('id, title_en, title_gu, topic_id, exam_id, storage_path, is_premium')
+    .eq('is_active', true);
+  if (filter?.topicId) query = query.eq('topic_id', filter.topicId);
+  if (filter?.examId) query = query.eq('exam_id', filter.examId);
+  return rows<Pdf>(query.order('sort_order'));
+}
+
+export async function fetchVideos(filter?: MaterialFilter): Promise<Video[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  let query = supabase
+    .from('videos')
+    .select('id, title_en, title_gu, topic_id, exam_id, youtube_id, is_premium')
+    .eq('is_active', true);
+  if (filter?.topicId) query = query.eq('topic_id', filter.topicId);
+  if (filter?.examId) query = query.eq('exam_id', filter.examId);
+  return rows<Video>(query.order('sort_order'));
+}
+
+export async function fetchNotes(filter?: MaterialFilter): Promise<Note[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  let query = supabase
+    .from('notes')
+    .select('id, title_en, title_gu, topic_id, body_md, is_premium')
+    .eq('is_active', true);
+  if (filter?.topicId) query = query.eq('topic_id', filter.topicId);
+  return rows<Note>(query.order('sort_order'));
+}
+
+export function pdfPublicUrl(storagePath: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/pdfs/${storagePath}`;
+}
+
+export async function fetchTests(): Promise<Test[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  const raw = await rows<Omit<Test, 'question_count'> & { test_questions: { count: number }[] }>(
+    supabase
+      .from('tests')
+      .select('id, title_en, title_gu, exam_id, duration_minutes, is_premium, test_questions(count)')
+      .eq('is_active', true)
+      .order('sort_order')
+      .returns<(Omit<Test, 'question_count'> & { test_questions: { count: number }[] })[]>()
+  );
+  return raw.map(({ test_questions, ...test }) => ({
+    ...test,
+    question_count: test_questions?.[0]?.count ?? 0,
+  }));
+}
+
+export async function fetchTestQuestions(testId: string): Promise<Question[]> {
+  const supabase = db();
+  if (!supabase) return [];
+  const raw = await rows<{ sort_order: number; questions: Question }>(
+    supabase
+      .from('test_questions')
+      .select(`sort_order, questions (${QUESTION_COLUMNS})`)
+      .eq('test_id', testId)
+      .order('sort_order')
+      .returns<{ sort_order: number; questions: Question }[]>()
+  );
+  return raw.map((r) => r.questions).filter(Boolean);
+}
+
+/** Anonymous "wrong question" report from the app (no login). */
+export async function reportQuestion(questionId: string, message: string, deviceId: string): Promise<void> {
+  const supabase = db();
+  if (!supabase) return;
+  const { error } = await supabase.from('question_reports').insert({
+    question_id: questionId,
+    message,
+    device_id: deviceId,
+  });
+  if (error) throw new Error(error.message);
 }
 
 const QUESTION_COLUMNS =

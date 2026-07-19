@@ -34,6 +34,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="flash" color={color} size={size} />,
         }}
       />
+      <Tabs.Screen
+        name="study"
+        options={{
+          title: gu ? 'સ્ટડી' : 'Study',
+          tabBarIcon: ({ color, size }) => <Ionicons name="library" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: gu ? 'પ્રગતિ' : 'Progress',
+          tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" color={color} size={size} />,
+        }}
+      />
     </Tabs>
   );
 }

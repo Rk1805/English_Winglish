@@ -22,6 +22,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
    Mumbai region for India users).
 2. In the Supabase **SQL Editor**, run these files in order:
    - `supabase/migrations/0001_initial_schema.sql`
+   - `supabase/migrations/0002_storage.sql` (PDF storage bucket)
+   - `supabase/migrations/0003_analytics_and_reports.sql` (usage analytics + in-app question reports)
    - `supabase/seed.sql` (loads all exams + grammar categories/topics + 2 sample questions)
 3. In **Authentication → Users**, create the admin user (email + password),
    then in the SQL editor promote it:
@@ -59,12 +61,18 @@ premium/sync.
 
 ## Current status
 
-- ✅ Database schema with RLS security, bilingual fields, seed taxonomy
-- ✅ Admin panel: login (admin-only), dashboard stats, question add/edit/delete
-  with filters; placeholders for tests/PDFs/videos/notes/users/reports
-- ✅ App: brand theme, EN/ગુજ toggle, grammar & exam browsing, quiz engine
-  (50/100/200/random/unlimited) with instant feedback, explanations, results
-  & review — no forced login
-- ⬜ Next: attempt tracking → performance analysis, mock tests,
-  PDFs/videos/notes screens, AdMob, Play Billing premium, push notifications,
-  bulk question import in admin
+- ✅ Database schema with RLS security, bilingual fields, seed taxonomy,
+  PDF storage bucket
+- ✅ Admin panel (all sections working): dashboard stats, questions CRUD with
+  filters, **bulk Excel/CSV import with template + validation preview**,
+  exams CRUD, categories & topics CRUD, mock tests with question assignment,
+  PDF upload to storage, videos (YouTube), notes (markdown), users (premium
+  grant), question reports, **analytics (online now, daily users, date range)**
+- ✅ App (Expo SDK 54, works in Expo Go): 5 tabs — Grammar, Exams, Practice
+  (random practice + **professional mock tests**: timer, question palette,
+  no instant answers, auto-submit, full review), Study (videos/PDFs/notes),
+  Progress (on-device attempt history & stats); EN/ગુજ toggle; anonymous
+  usage tracking; in-app "report mistake" on every reviewed question —
+  no forced login
+- ⬜ Next (needs your accounts): AdMob ads (stats live in the AdMob console),
+  Play Billing premium (needs Play Console), push notifications

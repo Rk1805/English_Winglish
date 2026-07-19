@@ -35,6 +35,45 @@ export type Question = {
   is_premium: boolean;
 };
 
+export type Test = {
+  id: string;
+  title_en: string;
+  title_gu: string | null;
+  exam_id: string | null;
+  duration_minutes: number;
+  is_premium: boolean;
+  question_count: number;
+};
+
+export type Pdf = {
+  id: string;
+  title_en: string;
+  title_gu: string | null;
+  topic_id: string | null;
+  exam_id: string | null;
+  storage_path: string;
+  is_premium: boolean;
+};
+
+export type Video = {
+  id: string;
+  title_en: string;
+  title_gu: string | null;
+  topic_id: string | null;
+  exam_id: string | null;
+  youtube_id: string;
+  is_premium: boolean;
+};
+
+export type Note = {
+  id: string;
+  title_en: string;
+  title_gu: string | null;
+  topic_id: string | null;
+  body_md: string;
+  is_premium: boolean;
+};
+
 /** Pick the Gujarati text when the toggle is on and a translation exists. */
 export function loc(gu: boolean, en: string, guText?: string | null): string {
   return gu && guText ? guText : en;
