@@ -1,0 +1,5 @@
+.DS_Store
+*.log
+
+# Secrets — never commit real keys
+admin/.env.local
