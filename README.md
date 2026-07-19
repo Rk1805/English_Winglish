@@ -20,17 +20,21 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 1. Create a free project at [supabase.com](https://supabase.com) (choose the
    Mumbai region for India users).
+
 2. In the Supabase **SQL Editor**, run these files in order:
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_storage.sql` (PDF storage bucket)
    - `supabase/migrations/0003_analytics_and_reports.sql` (usage analytics + in-app question reports)
    - `supabase/seed.sql` (loads all exams + grammar categories/topics + 2 sample questions)
+
 3. In **Authentication → Users**, create the admin user (email + password),
-   then in the SQL editor promote it:
-   ```sql
-   update profiles set role = 'admin'
-   where id = (select id from auth.users where email = 'YOUR_ADMIN_EMAIL');
-   ```
+then in the SQL editor promote it:
+
+```sql
+update profiles set role = 'admin'
+where id = (select id from auth.users where email = 'YOUR_ADMIN_EMAIL');
+```
+
 4. Copy the project URL and anon/publishable key from
    **Project Settings → API** into:
    - `admin/.env.local` (copy from `admin/.env.local.example`)
@@ -58,21 +62,3 @@ sample questions so the UI is fully explorable offline.
 Note: the app deliberately has **no login screen** — students land directly on
 the home tabs. Sign-in will be added later only as an optional step for
 premium/sync.
-
-## Current status
-
-- ✅ Database schema with RLS security, bilingual fields, seed taxonomy,
-  PDF storage bucket
-- ✅ Admin panel (all sections working): dashboard stats, questions CRUD with
-  filters, **bulk Excel/CSV import with template + validation preview**,
-  exams CRUD, categories & topics CRUD, mock tests with question assignment,
-  PDF upload to storage, videos (YouTube), notes (markdown), users (premium
-  grant), question reports, **analytics (online now, daily users, date range)**
-- ✅ App (Expo SDK 54, works in Expo Go): 5 tabs — Grammar, Exams, Practice
-  (random practice + **professional mock tests**: timer, question palette,
-  no instant answers, auto-submit, full review), Study (videos/PDFs/notes),
-  Progress (on-device attempt history & stats); EN/ગુજ toggle; anonymous
-  usage tracking; in-app "report mistake" on every reviewed question —
-  no forced login
-- ⬜ Next (needs your accounts): AdMob ads (stats live in the AdMob console),
-  Play Billing premium (needs Play Console), push notifications
