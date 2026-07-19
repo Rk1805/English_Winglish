@@ -45,7 +45,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-500">{c.label}</div>
+            <div className="text-sm text-slate-900">{c.label}</div>
             <div className="mt-1 text-3xl font-bold text-slate-800">
               {c.value ?? "—"}
             </div>

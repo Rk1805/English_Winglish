@@ -89,17 +89,17 @@ export default function NotesPage() {
       {editing !== null && (
         <div className="mb-4 space-y-3 rounded-xl bg-white p-4 shadow-sm">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-slate-900">
               Title (English)
               <input className={inputCls} value={form.title_en}
                 onChange={(e) => setForm({ ...form, title_en: e.target.value })} />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-slate-900">
               Title (ગુજરાતી)
               <input className={inputCls} value={form.title_gu}
                 onChange={(e) => setForm({ ...form, title_gu: e.target.value })} />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-slate-900">
               Topic
               <select className={inputCls} value={form.topic_id}
                 onChange={(e) => setForm({ ...form, topic_id: e.target.value })}>
@@ -107,13 +107,13 @@ export default function NotesPage() {
                 {topics.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
               </select>
             </label>
-            <label className="mt-6 flex items-center gap-2 text-sm text-slate-700">
+            <label className="mt-6 flex items-center gap-2 text-sm text-slate-900">
               <input type="checkbox" checked={form.is_premium}
                 onChange={(e) => setForm({ ...form, is_premium: e.target.checked })} />
               Premium only
             </label>
           </div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-slate-900">
             Content (Markdown supported — headings with #, lists with -, **bold**)
             <textarea rows={10} className={inputCls + " font-mono"} value={form.body_md}
               onChange={(e) => setForm({ ...form, body_md: e.target.value })} />
@@ -133,7 +133,7 @@ export default function NotesPage() {
           <tr key={note.id} className="border-b border-slate-100">
             <td className="px-4 py-3 font-medium">
               {note.title_en}
-              {note.title_gu && <span className="ml-2 text-slate-500">{note.title_gu}</span>}
+              {note.title_gu && <span className="ml-2 text-slate-900">{note.title_gu}</span>}
             </td>
             <td className="px-4 py-3">{topics.find((t) => t.id === note.topic_id)?.name_en ?? "—"}</td>
             <td className="px-4 py-3">{note.is_premium ? "Yes" : "No"}</td>

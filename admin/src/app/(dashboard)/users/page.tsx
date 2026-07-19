@@ -68,7 +68,7 @@ export default function UsersPage() {
           </tr>
         ))}
       </Table>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-slate-900">
         Note: app users appear here once optional sign-in is added to the app. Premium normally
         activates automatically via Play Billing; manual grant is for special cases.
       </p>

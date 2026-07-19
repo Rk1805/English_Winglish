@@ -84,7 +84,7 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
   }
 
   const input = "mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm";
-  const label = "block text-sm font-medium text-slate-700";
+  const label = "block text-sm font-medium text-slate-900";
 
   return (
     <form onSubmit={save} className="max-w-3xl space-y-5 rounded-xl bg-white p-6 shadow-sm">
@@ -130,7 +130,7 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">
+        <legend className="mb-2 text-sm font-medium text-slate-900">
           Options — select the correct answer *
         </legend>
         <div className="space-y-2">
@@ -181,11 +181,11 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
       </div>
 
       <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-900">
           <input type="checkbox" checked={form.is_premium} onChange={(e) => set("is_premium", e.target.checked)} />
           Premium only
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-slate-900">
           <input type="checkbox" checked={form.is_active} onChange={(e) => set("is_active", e.target.checked)} />
           Active (visible in app)
         </label>
@@ -199,7 +199,7 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
           {saving ? "Saving…" : questionId ? "Update Question" : "Add Question"}
         </button>
         <button type="button" onClick={() => router.push("/questions")}
-          className="rounded-md border border-slate-300 px-5 py-2 text-slate-600 hover:bg-slate-50">
+          className="rounded-md border border-slate-300 px-5 py-2 text-slate-900 hover:bg-slate-50">
           Cancel
         </button>
       </div>

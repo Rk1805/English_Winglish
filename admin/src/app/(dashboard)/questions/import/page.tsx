@@ -205,7 +205,7 @@ export default function ImportQuestionsPage() {
       />
 
       <div className="mb-4 space-y-3 rounded-xl bg-white p-5 shadow-sm">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           <b>Step 1:</b> Download the template, fill one question per row (Excel or Google
           Sheets → save as .xlsx or .csv). Required: question, 4 options, correct answer
           (A/B/C/D), and a topic or exam name exactly as it appears in the admin panel.
@@ -214,7 +214,7 @@ export default function ImportQuestionsPage() {
         <button className={secondaryBtn} onClick={downloadTemplate}>
           ⬇ Download template (.xlsx)
         </button>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           <b>Step 2:</b> Upload the filled file — you get a preview with any mistakes before
           anything is saved.
         </p>
@@ -255,15 +255,15 @@ export default function ImportQuestionsPage() {
           {invalidRows.length > 0 && (
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <p className="mb-2 text-sm font-semibold text-red-700">Rows with errors (fix in the file and re-upload):</p>
-              <ul className="space-y-1 text-sm text-slate-700">
+              <ul className="space-y-1 text-sm text-slate-900">
                 {invalidRows.slice(0, 30).map((row) => (
                   <li key={row.rowNumber}>
                     <b>Row {row.rowNumber}</b> — {row.errors.join("; ")}{" "}
-                    <span className="text-slate-400">({row.preview.slice(0, 60)})</span>
+                    <span className="text-slate-900">({row.preview.slice(0, 60)})</span>
                   </li>
                 ))}
                 {invalidRows.length > 30 && (
-                  <li className="text-slate-400">…and {invalidRows.length - 30} more</li>
+                  <li className="text-slate-900">…and {invalidRows.length - 30} more</li>
                 )}
               </ul>
             </div>

@@ -44,8 +44,8 @@ export default function LoginPage() {
         className="w-full max-w-sm rounded-xl bg-white p-8 shadow"
       >
         <h1 className="mb-1 text-2xl font-bold text-slate-800">English Winglish</h1>
-        <p className="mb-6 text-sm text-slate-500">Admin Panel — by Nikunj Sir</p>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <p className="mb-6 text-sm text-slate-900">Admin Panel — by Nikunj Sir</p>
+        <label className="mb-2 block text-sm font-medium text-slate-900">
           Email
           <input
             type="email"
@@ -55,7 +55,7 @@ export default function LoginPage() {
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
           />
         </label>
-        <label className="mb-4 block text-sm font-medium text-slate-700">
+        <label className="mb-4 block text-sm font-medium text-slate-900">
           Password
           <input
             type="password"

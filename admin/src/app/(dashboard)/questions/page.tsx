@@ -85,7 +85,7 @@ export default function QuestionsPage() {
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-slate-500">
+          <thead className="border-b border-slate-200 text-slate-900">
             <tr>
               <th className="px-4 py-3">Question</th>
               <th className="px-4 py-3">Topic</th>
@@ -97,10 +97,10 @@ export default function QuestionsPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-900">Loading…</td></tr>
             )}
             {!loading && questions.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">No questions found.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-900">No questions found.</td></tr>
             )}
             {questions.map((q) => (
               <tr key={q.id} className="border-b border-slate-100">

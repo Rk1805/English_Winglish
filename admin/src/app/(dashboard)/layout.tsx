@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-500">
+      <div className="flex min-h-screen items-center justify-center text-slate-900">
         Loading…
       </div>
     );
@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="flex w-60 flex-col border-r border-slate-200 bg-white">
         <div className="border-b border-slate-200 p-4">
           <div className="text-lg font-bold text-red-600">English Winglish</div>
-          <div className="text-xs text-slate-500">Admin Panel</div>
+          <div className="text-xs text-slate-900">Admin Panel</div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {NAV.map((item) => (
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className={`block rounded-md px-3 py-2 text-sm font-medium ${
                 pathname === item.href
                   ? "bg-red-50 text-red-700"
-                  : "text-slate-600 hover:bg-slate-50"
+                  : "text-slate-900 hover:bg-slate-50"
               }`}
             >
               {item.label}
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             await supabaseBrowser().auth.signOut();
             router.replace("/login");
           }}
-          className="m-3 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+          className="m-3 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 hover:bg-slate-50"
         >
           Sign out
         </button>

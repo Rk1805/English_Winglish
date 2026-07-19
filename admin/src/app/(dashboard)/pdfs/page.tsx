@@ -94,21 +94,21 @@ export default function PdfsPage() {
 
       {adding && (
         <div className="mb-4 grid grid-cols-2 items-end gap-3 rounded-xl bg-white p-4 shadow-sm lg:grid-cols-6">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             PDF file
             <input ref={fileRef} type="file" accept="application/pdf" className={inputCls} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Title (English)
             <input className={inputCls} value={form.title_en} placeholder="defaults to file name"
               onChange={(e) => setForm({ ...form, title_en: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Title (ગુજરાતી)
             <input className={inputCls} value={form.title_gu}
               onChange={(e) => setForm({ ...form, title_gu: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Topic
             <select className={inputCls} value={form.topic_id}
               onChange={(e) => setForm({ ...form, topic_id: e.target.value })}>
@@ -116,7 +116,7 @@ export default function PdfsPage() {
               {topics.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
             </select>
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Exam
             <select className={inputCls} value={form.exam_id}
               onChange={(e) => setForm({ ...form, exam_id: e.target.value })}>
@@ -125,7 +125,7 @@ export default function PdfsPage() {
             </select>
           </label>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm text-slate-700">
+            <label className="flex items-center gap-1 text-sm text-slate-900">
               <input type="checkbox" checked={form.is_premium}
                 onChange={(e) => setForm({ ...form, is_premium: e.target.checked })} />
               Premium
@@ -147,7 +147,7 @@ export default function PdfsPage() {
                 className="text-blue-700 hover:underline">
                 {pdf.title_en}
               </a>
-              {pdf.title_gu && <span className="ml-2 text-slate-500">{pdf.title_gu}</span>}
+              {pdf.title_gu && <span className="ml-2 text-slate-900">{pdf.title_gu}</span>}
             </td>
             <td className="px-4 py-3">
               {topics.find((t) => t.id === pdf.topic_id)?.name_en ??

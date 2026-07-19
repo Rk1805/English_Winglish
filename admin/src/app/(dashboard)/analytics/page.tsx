@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {cards.map((card) => (
           <div key={card.label} className="rounded-xl bg-white p-5 shadow-sm">
-            <div className="text-xs text-slate-500">{card.label}</div>
+            <div className="text-xs text-slate-900">{card.label}</div>
             <div className={`mt-1 text-3xl font-bold ${card.accent}`}>{card.value ?? "—"}</div>
           </div>
         ))}
@@ -104,12 +104,12 @@ export default function AnalyticsPage() {
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-end gap-3">
           <h2 className="mr-auto text-lg font-semibold text-slate-800">Daily users by date</h2>
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-900">
             From
             <input type="date" className={inputCls} value={from} max={to}
               onChange={(e) => setFrom(e.target.value)} />
           </label>
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-900">
             To
             <input type="date" className={inputCls} value={to} min={from} max={today()}
               onChange={(e) => setTo(e.target.value)} />
@@ -120,25 +120,25 @@ export default function AnalyticsPage() {
         {error && <p className="text-sm text-red-600">{error}</p>}
         {!error && rangeRows && (
           <>
-            <p className="mb-3 text-sm text-slate-600">
+            <p className="mb-3 text-sm text-slate-900">
               <b>{rangeUnique ?? "—"}</b> unique users in this period
             </p>
             {rangeRows.length === 0 ? (
-              <p className="py-6 text-center text-slate-400">
+              <p className="py-6 text-center text-slate-900">
                 No activity in this period yet. Data appears once students open the app.
               </p>
             ) : (
               <div className="space-y-1">
                 {rangeRows.map((row) => (
                   <div key={row.day} className="flex items-center gap-3 text-sm">
-                    <span className="w-24 shrink-0 text-slate-500">
+                    <span className="w-24 shrink-0 text-slate-900">
                       {new Date(row.day + "T00:00:00").toLocaleDateString("en-IN", {
                         day: "2-digit", month: "short",
                       })}
                     </span>
                     <div className="h-5 rounded bg-red-500"
                       style={{ width: `${Math.max(2, (row.users / maxUsers) * 100)}%` }} />
-                    <span className="font-medium text-slate-700">{row.users}</span>
+                    <span className="font-medium text-slate-900">{row.users}</span>
                   </div>
                 ))}
               </div>
@@ -147,7 +147,7 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-900">
         A &quot;user&quot; is a unique app installation (anonymous device id — no login needed).
         Ad statistics (impressions, video ad plays, earnings) will appear in the Google AdMob
         console once ads are integrated — they are not tracked here.

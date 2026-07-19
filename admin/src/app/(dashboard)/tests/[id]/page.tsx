@@ -67,7 +67,7 @@ export default function ManageTestPage({ params }: { params: Promise<{ id: strin
         action={
           <div className="flex items-center gap-3">
             {savedMsg && <span className="text-sm font-medium text-green-600">Saved ✓</span>}
-            <span className="text-sm text-slate-500">{assigned.size} questions selected</span>
+            <span className="text-sm text-slate-900">{assigned.size} questions selected</span>
             <button className={primaryBtn} onClick={save} disabled={saving}>
               {saving ? "Saving…" : "Save Test"}
             </button>
@@ -93,7 +93,7 @@ export default function ManageTestPage({ params }: { params: Promise<{ id: strin
 
       <div className="space-y-2">
         {questions.length === 0 && (
-          <p className="rounded-xl bg-white p-8 text-center text-slate-400 shadow-sm">
+          <p className="rounded-xl bg-white p-8 text-center text-slate-900 shadow-sm">
             No questions match the filters.
           </p>
         )}
@@ -111,7 +111,7 @@ export default function ManageTestPage({ params }: { params: Promise<{ id: strin
             />
             <div>
               <p className="text-sm font-medium text-slate-800">{question.question_en}</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-900">
                 {topics.find((t) => t.id === question.topic_id)?.name_en ?? "no topic"} ·{" "}
                 {exams.find((x) => x.id === question.exam_id)?.name_en ?? "no exam"}
                 {question.year ? ` (${question.year})` : ""} · {question.difficulty}

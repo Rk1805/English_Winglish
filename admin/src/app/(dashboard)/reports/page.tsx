@@ -44,7 +44,7 @@ export default function ReportsPage() {
                   {questions[report.question_id].question_en}
                 </Link>
               ) : (
-                <span className="text-slate-400">(question deleted)</span>
+                <span className="text-slate-900">(question deleted)</span>
               )}
             </td>
             <td className="max-w-md px-4 py-3">{report.message}</td>
@@ -55,7 +55,7 @@ export default function ReportsPage() {
                     ? "bg-yellow-100 text-yellow-800"
                     : report.status === "resolved"
                       ? "bg-green-100 text-green-700"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-slate-100 text-slate-900"
                 }`}>
                 {report.status}
               </span>
@@ -70,7 +70,7 @@ export default function ReportsPage() {
                     onClick={() => setStatus(report, "resolved")}>
                     Resolve
                   </button>
-                  <button className="text-slate-500 hover:underline"
+                  <button className="text-slate-900 hover:underline"
                     onClick={() => setStatus(report, "rejected")}>
                     Reject
                   </button>

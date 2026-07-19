@@ -81,17 +81,17 @@ export default function CategoriesPage() {
 
   const catFields = (
     <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-6">
-      <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+      <label className="text-sm font-medium text-slate-900 lg:col-span-2">
         Name (English)
         <input className={inputCls} value={catForm.name_en}
           onChange={(e) => setCatForm({ ...catForm, name_en: e.target.value })} />
       </label>
-      <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+      <label className="text-sm font-medium text-slate-900 lg:col-span-2">
         Name (ગુજરાતી)
         <input className={inputCls} value={catForm.name_gu}
           onChange={(e) => setCatForm({ ...catForm, name_gu: e.target.value })} />
       </label>
-      <label className="text-sm font-medium text-slate-700">
+      <label className="text-sm font-medium text-slate-900">
         Kind
         <select className={inputCls} value={catForm.kind}
           onChange={(e) => setCatForm({ ...catForm, kind: e.target.value as CatForm["kind"] })}>
@@ -100,7 +100,7 @@ export default function CategoriesPage() {
         </select>
       </label>
       <div className="flex items-center gap-2">
-        <label className="flex items-center gap-1 text-sm text-slate-700">
+        <label className="flex items-center gap-1 text-sm text-slate-900">
           <input type="checkbox" checked={catForm.is_active}
             onChange={(e) => setCatForm({ ...catForm, is_active: e.target.checked })} />
           Active
@@ -139,10 +139,10 @@ export default function CategoriesPage() {
                 <button
                   onClick={() => setOpen(isOpen ? null : category.id)}
                   className="flex flex-1 items-center gap-3 text-left">
-                  <span className="text-slate-400">{isOpen ? "▾" : "▸"}</span>
+                  <span className="text-slate-900">{isOpen ? "▾" : "▸"}</span>
                   <span className="font-semibold text-slate-800">{category.name_en}</span>
-                  {category.name_gu && <span className="text-slate-500">{category.name_gu}</span>}
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                  {category.name_gu && <span className="text-slate-900">{category.name_gu}</span>}
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-900">
                     {catTopics.length} topics
                   </span>
                   <ActiveBadge active={(category as Category & { is_active: boolean }).is_active ?? true} />
@@ -177,7 +177,7 @@ export default function CategoriesPage() {
                     <div key={topic.id} className="flex items-center gap-3 border-b border-slate-50 py-2">
                       <span className="flex-1 text-sm">
                         {topic.name_en}
-                        {topic.name_gu && <span className="ml-2 text-slate-500">{topic.name_gu}</span>}
+                        {topic.name_gu && <span className="ml-2 text-slate-900">{topic.name_gu}</span>}
                       </span>
                       <ActiveBadge active={(topic as Topic & { is_active: boolean }).is_active ?? true} />
                       <button
@@ -202,18 +202,18 @@ export default function CategoriesPage() {
 
                   {topicEditing?.categoryId === category.id ? (
                     <div className="mt-3 grid grid-cols-2 items-end gap-3 lg:grid-cols-5">
-                      <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+                      <label className="text-sm font-medium text-slate-900 lg:col-span-2">
                         Topic (English)
                         <input className={inputCls} value={topicForm.name_en}
                           onChange={(e) => setTopicForm({ ...topicForm, name_en: e.target.value })} />
                       </label>
-                      <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+                      <label className="text-sm font-medium text-slate-900 lg:col-span-2">
                         Topic (ગુજરાતી)
                         <input className={inputCls} value={topicForm.name_gu}
                           onChange={(e) => setTopicForm({ ...topicForm, name_gu: e.target.value })} />
                       </label>
                       <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-1 text-sm text-slate-700">
+                        <label className="flex items-center gap-1 text-sm text-slate-900">
                           <input type="checkbox" checked={topicForm.is_active}
                             onChange={(e) => setTopicForm({ ...topicForm, is_active: e.target.checked })} />
                           Active

@@ -81,23 +81,23 @@ export default function ExamsPage() {
 
       {editing !== null && (
         <div className="mb-4 grid grid-cols-2 items-end gap-3 rounded-xl bg-white p-4 shadow-sm lg:grid-cols-6">
-          <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+          <label className="text-sm font-medium text-slate-900 lg:col-span-2">
             Name (English)
             <input className={inputCls} value={form.name_en}
               onChange={(e) => setForm({ ...form, name_en: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+          <label className="text-sm font-medium text-slate-900 lg:col-span-2">
             Name (ગુજરાતી)
             <input className={inputCls} value={form.name_gu}
               onChange={(e) => setForm({ ...form, name_gu: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Order
             <input type="number" className={inputCls} value={form.sort_order}
               onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
           </label>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-slate-900">
               <input type="checkbox" checked={form.is_active}
                 onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
               Active

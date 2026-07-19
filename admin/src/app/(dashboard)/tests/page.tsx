@@ -71,17 +71,17 @@ export default function TestsPage() {
 
       {creating && (
         <div className="mb-4 grid grid-cols-2 items-end gap-3 rounded-xl bg-white p-4 shadow-sm lg:grid-cols-6">
-          <label className="text-sm font-medium text-slate-700 lg:col-span-2">
+          <label className="text-sm font-medium text-slate-900 lg:col-span-2">
             Title (English)
             <input className={inputCls} value={form.title_en}
               onChange={(e) => setForm({ ...form, title_en: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Title (ગુજરાતી)
             <input className={inputCls} value={form.title_gu}
               onChange={(e) => setForm({ ...form, title_gu: e.target.value })} />
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Exam
             <select className={inputCls} value={form.exam_id}
               onChange={(e) => setForm({ ...form, exam_id: e.target.value })}>
@@ -89,13 +89,13 @@ export default function TestsPage() {
               {exams.map((x) => <option key={x.id} value={x.id}>{x.name_en}</option>)}
             </select>
           </label>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-900">
             Minutes
             <input type="number" className={inputCls} value={form.duration_minutes}
               onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} />
           </label>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1 text-sm text-slate-700">
+            <label className="flex items-center gap-1 text-sm text-slate-900">
               <input type="checkbox" checked={form.is_premium}
                 onChange={(e) => setForm({ ...form, is_premium: e.target.checked })} />
               Premium
