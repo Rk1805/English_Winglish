@@ -36,7 +36,7 @@ const EXAMPLE_ROWS = [
     question_gu: '"Rapid" નો સમાનાર્થી પસંદ કરો:',
     option_a_gu: "", option_b_gu: "", option_c_gu: "", option_d_gu: "",
     explanation_gu: "Rapid એટલે ખૂબ ઝડપી.",
-    topic: "Synonyms", exam: "GSSSB", year: 2023, difficulty: "easy", premium: "no",
+    topic: "Synonyms", exam: "GSSSB, Talati", year: 2023, difficulty: "easy", premium: "no",
   },
   {
     question_en: "She ______ TV when I called her.",
@@ -127,12 +127,18 @@ export default function ImportQuestionsPage() {
       if (correct_index === null) errors.push("correct must be A/B/C/D or 1-4");
 
       const topicName = text("topic").toLowerCase();
-      const examName = text("exam").toLowerCase();
       const topic_id = topicName ? topicByName.get(topicName) : undefined;
-      const exam_id = examName ? examByName.get(examName) : undefined;
       if (topicName && !topic_id) errors.push(`unknown topic "${text("topic")}"`);
-      if (examName && !exam_id) errors.push(`unknown exam "${text("exam")}"`);
-      if (!topic_id && !exam_id) errors.push("need a topic or an exam (or both)");
+
+      // exam column accepts multiple exams separated by commas: "GSSSB, Talati, TET"
+      const examNames = text("exam").split(",").map((s) => s.trim()).filter(Boolean);
+      const exam_ids: string[] = [];
+      for (const name of examNames) {
+        const examId = examByName.get(name.toLowerCase());
+        if (!examId) errors.push(`unknown exam "${name}"`);
+        else exam_ids.push(examId);
+      }
+      if (!topic_id && exam_ids.length === 0) errors.push("need a topic or an exam (or both)");
 
       const difficultyRaw = text("difficulty").toLowerCase() || "medium";
       const difficulty = ["easy", "medium", "hard"].includes(difficultyRaw) ? difficultyRaw : null;
@@ -162,7 +168,7 @@ export default function ImportQuestionsPage() {
                 explanation_en: text("explanation") || text("explanation_en") || null,
                 explanation_gu: text("explanation_gu") || null,
                 topic_id: topic_id ?? null,
-                exam_id: exam_id ?? null,
+                exam_ids,
                 year,
                 difficulty,
                 is_premium: ["yes", "true", "1"].includes(text("premium").toLowerCase()),
@@ -209,6 +215,7 @@ export default function ImportQuestionsPage() {
           <b>Step 1:</b> Download the template, fill one question per row (Excel or Google
           Sheets → save as .xlsx or .csv). Required: question, 4 options, correct answer
           (A/B/C/D), and a topic or exam name exactly as it appears in the admin panel.
+          Multiple exams go in one cell separated by commas (e.g. &quot;GSSSB, Talati, TET&quot;).
           Gujarati columns are optional.
         </p>
         <button className={secondaryBtn} onClick={downloadTemplate}>

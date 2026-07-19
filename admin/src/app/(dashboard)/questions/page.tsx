@@ -27,7 +27,7 @@ export default function QuestionsPage() {
       .order("created_at", { ascending: false })
       .limit(100);
     if (topicFilter) q = q.eq("topic_id", topicFilter);
-    if (examFilter) q = q.eq("exam_id", examFilter);
+    if (examFilter) q = q.contains("exam_ids", [examFilter]);
     q.then(({ data }) => {
       setQuestions(data ?? []);
       setLoading(false);
@@ -107,7 +107,12 @@ export default function QuestionsPage() {
                 <td className="max-w-md px-4 py-3">{q.question_en}</td>
                 <td className="px-4 py-3">{topics.find((t) => t.id === q.topic_id)?.name_en ?? "—"}</td>
                 <td className="px-4 py-3">
-                  {exams.find((x) => x.id === q.exam_id)?.name_en ?? "—"}
+                  {q.exam_ids.length > 0
+                    ? q.exam_ids
+                        .map((id) => exams.find((x) => x.id === id)?.name_en)
+                        .filter(Boolean)
+                        .join(", ")
+                    : "—"}
                   {q.year ? ` (${q.year})` : ""}
                 </td>
                 <td className="px-4 py-3 capitalize">{q.difficulty}</td>

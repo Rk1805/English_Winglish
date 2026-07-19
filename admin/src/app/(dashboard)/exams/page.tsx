@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabaseBrowser, type Exam } from "@/lib/supabase";
 import {
   ActiveBadge,
@@ -121,6 +122,9 @@ export default function ExamsPage() {
             <td className="px-4 py-3">{exam.sort_order}</td>
             <td className="px-4 py-3"><ActiveBadge active={exam.is_active} /></td>
             <td className="px-4 py-3 text-right whitespace-nowrap">
+              <Link href={`/exams/${exam.id}`} className="mr-3 text-green-700 hover:underline">
+                Topics
+              </Link>
               <button className="mr-3 text-blue-600 hover:underline" onClick={() => startEdit(exam)}>
                 Edit
               </button>

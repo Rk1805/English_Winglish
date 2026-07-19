@@ -6,7 +6,7 @@ import { supabaseBrowser, type Question, type Topic, type Exam } from "@/lib/sup
 
 const EMPTY: Omit<Question, "id" | "created_at"> = {
   topic_id: null,
-  exam_id: null,
+  exam_ids: [],
   year: null,
   question_en: "",
   question_gu: "",
@@ -37,6 +37,7 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
         if (data) {
           setForm({
             ...data,
+            exam_ids: data.exam_ids ?? [],
             options_gu: data.options_gu ?? ["", "", "", ""],
             question_gu: data.question_gu ?? "",
             explanation_en: data.explanation_en ?? "",
@@ -54,8 +55,8 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.topic_id && !form.exam_id) {
-      setError("Select a topic (grammar) or an exam (PYQ) — at least one.");
+    if (!form.topic_id && form.exam_ids.length === 0) {
+      setError("Select a topic (grammar) or at least one exam (PYQ).");
       return;
     }
     if (form.options_en.some((o) => !o.trim())) {
@@ -88,19 +89,12 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
 
   return (
     <form onSubmit={save} className="max-w-3xl space-y-5 rounded-xl bg-white p-6 shadow-sm">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <label className={label}>
           Topic (grammar)
           <select value={form.topic_id ?? ""} onChange={(e) => set("topic_id", e.target.value || null)} className={input}>
             <option value="">— none —</option>
             {topics.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
-          </select>
-        </label>
-        <label className={label}>
-          Exam (PYQ)
-          <select value={form.exam_id ?? ""} onChange={(e) => set("exam_id", e.target.value || null)} className={input}>
-            <option value="">— none —</option>
-            {exams.map((x) => <option key={x.id} value={x.id}>{x.name_en}</option>)}
           </select>
         </label>
         <label className={label}>
@@ -117,6 +111,31 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
           </select>
         </label>
       </div>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-slate-900">
+          Exams (PYQ) — select every exam this question was asked in
+        </legend>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-slate-200 p-3 sm:grid-cols-3 lg:grid-cols-4">
+          {exams.map((exam) => (
+            <label key={exam.id} className="flex items-center gap-2 text-sm text-slate-900">
+              <input
+                type="checkbox"
+                checked={form.exam_ids.includes(exam.id)}
+                onChange={(e) =>
+                  set(
+                    "exam_ids",
+                    e.target.checked
+                      ? [...form.exam_ids, exam.id]
+                      : form.exam_ids.filter((id) => id !== exam.id)
+                  )
+                }
+              />
+              {exam.name_en}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <label className={label}>

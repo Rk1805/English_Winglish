@@ -32,7 +32,7 @@ export default function ManageTestPage({ params }: { params: Promise<{ id: strin
     const supabase = supabaseBrowser();
     let query = supabase.from("questions").select("*").order("created_at", { ascending: false }).limit(200);
     if (topicFilter) query = query.eq("topic_id", topicFilter);
-    if (examFilter) query = query.eq("exam_id", examFilter);
+    if (examFilter) query = query.contains("exam_ids", [examFilter]);
     query.then(({ data }) => setQuestions(data ?? []));
   }, [topicFilter, examFilter]);
 
@@ -113,7 +113,12 @@ export default function ManageTestPage({ params }: { params: Promise<{ id: strin
               <p className="text-sm font-medium text-slate-800">{question.question_en}</p>
               <p className="mt-1 text-xs text-slate-900">
                 {topics.find((t) => t.id === question.topic_id)?.name_en ?? "no topic"} ·{" "}
-                {exams.find((x) => x.id === question.exam_id)?.name_en ?? "no exam"}
+                {question.exam_ids.length > 0
+                  ? question.exam_ids
+                      .map((id) => exams.find((x) => x.id === id)?.name_en)
+                      .filter(Boolean)
+                      .join(", ")
+                  : "no exam"}
                 {question.year ? ` (${question.year})` : ""} · {question.difficulty}
               </p>
             </div>

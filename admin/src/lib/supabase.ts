@@ -102,7 +102,7 @@ export type QuestionReport = {
 export type Question = {
   id: string;
   topic_id: string | null;
-  exam_id: string | null;
+  exam_ids: string[];
   year: number | null;
   question_en: string;
   question_gu: string | null;
