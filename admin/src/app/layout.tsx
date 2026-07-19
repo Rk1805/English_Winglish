@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "English Winglish — Admin",
   description: "Admin panel for the English Winglish exam preparation app",
+  icons: {
+    icon: "/logo.jpeg", // Replace with your exact filename inside the public folder
+  },
 };
 
 export default function RootLayout({
