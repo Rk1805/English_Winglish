@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
+import { ErrorView, LoadingView, useAsyncData, useFocusRefreshKey } from '@/components/async-view';
 import { BrandHeader } from '@/components/brand-header';
 import { MaterialSections } from '@/components/material-sections';
 import { fetchNotes, fetchPdfs, fetchVideos } from '@/lib/content';
@@ -10,10 +10,11 @@ import { Brand } from '@/lib/theme';
 
 export default function StudyTab() {
   const { gu } = useLanguage();
+  const refreshKey = useFocusRefreshKey();
   const { data, error } = useAsyncData(async () => {
     const [videos, pdfs, notes] = await Promise.all([fetchVideos(), fetchPdfs(), fetchNotes()]);
     return { videos, pdfs, notes };
-  });
+  }, [refreshKey]);
 
   const empty =
     data && data.videos.length === 0 && data.pdfs.length === 0 && data.notes.length === 0;

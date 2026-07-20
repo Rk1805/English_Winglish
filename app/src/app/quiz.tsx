@@ -9,6 +9,7 @@ import { ReportButton } from '@/components/report-button';
 import { fetchQuestions, QuizSource } from '@/lib/content';
 import { saveAttempt } from '@/lib/history';
 import { useLanguage } from '@/lib/language';
+import { playCorrectSound, playWrongSound } from '@/lib/sounds';
 import {
   Question,
   questionExplanation,
@@ -117,7 +118,10 @@ function Quiz({ questions, gu }: { questions: Question[]; gu: boolean }) {
               <Pressable
                 key={i}
                 disabled={answered}
-                onPress={() => setAnswers((a) => ({ ...a, [index]: i }))}
+                onPress={() => {
+                  (i === question.correct_index ? playCorrectSound : playWrongSound)();
+                  setAnswers((a) => ({ ...a, [index]: i }));
+                }}
                 style={[
                   styles.option,
                   isCorrect && { backgroundColor: Brand.greenBg, borderColor: Brand.green },

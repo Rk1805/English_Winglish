@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
+import { ErrorView, LoadingView, useAsyncData, useFocusRefreshKey } from '@/components/async-view';
 import { BrandHeader } from '@/components/brand-header';
 import { fetchCategories } from '@/lib/content';
 import { useLanguage } from '@/lib/language';
@@ -12,7 +12,8 @@ import { Brand } from '@/lib/theme';
 export default function GrammarTab() {
   const router = useRouter();
   const { gu } = useLanguage();
-  const { data, error } = useAsyncData(fetchCategories);
+  const refreshKey = useFocusRefreshKey();
+  const { data, error } = useAsyncData(fetchCategories, [refreshKey]);
 
   return (
     <View style={styles.screen}>
