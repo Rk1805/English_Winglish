@@ -11,6 +11,8 @@ export default function QuestionsPage() {
   const [topicFilter, setTopicFilter] = useState("");
   const [examFilter, setExamFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const supabase = supabaseBrowser();
@@ -30,15 +32,54 @@ export default function QuestionsPage() {
     if (examFilter) q = q.contains("exam_ids", [examFilter]);
     q.then(({ data }) => {
       setQuestions(data ?? []);
+      setSelected(new Set());
       setLoading(false);
     });
   }, [topicFilter, examFilter]);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelected((prev) =>
+      prev.size === questions.length ? new Set() : new Set(questions.map((q) => q.id))
+    );
+  }
 
   async function remove(id: string) {
     if (!confirm("Delete this question permanently?")) return;
     await supabaseBrowser().from("questions").delete().eq("id", id);
     setQuestions((qs) => qs.filter((q) => q.id !== id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   }
+
+  async function removeSelected() {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!confirm(`Delete ${ids.length} selected question${ids.length > 1 ? "s" : ""} permanently?`))
+      return;
+    setDeleting(true);
+    const { error } = await supabaseBrowser().from("questions").delete().in("id", ids);
+    setDeleting(false);
+    if (error) {
+      alert(`Could not delete: ${error.message}`);
+      return;
+    }
+    setQuestions((qs) => qs.filter((q) => !selected.has(q.id)));
+    setSelected(new Set());
+  }
+
+  const allSelected = questions.length > 0 && selected.size === questions.length;
 
   return (
     <div>
@@ -60,7 +101,7 @@ export default function QuestionsPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <select
           value={topicFilter}
           onChange={(e) => setTopicFilter(e.target.value)}
@@ -81,12 +122,41 @@ export default function QuestionsPage() {
             <option key={x.id} value={x.id}>{x.name_en}</option>
           ))}
         </select>
+
+        {selected.size > 0 && (
+          <div className="ml-auto flex items-center gap-3 rounded-md bg-red-50 px-3 py-2">
+            <span className="text-sm font-medium text-red-700">
+              {selected.size} selected
+            </span>
+            <button
+              onClick={removeSelected}
+              disabled={deleting}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting ? "Deleting…" : "Delete selected"}
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-sm text-slate-600 hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 text-slate-900">
             <tr>
+              <th className="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="Select all questions"
+                />
+              </th>
               <th className="px-4 py-3">Question</th>
               <th className="px-4 py-3">Topic</th>
               <th className="px-4 py-3">Exam / Year</th>
@@ -97,13 +167,21 @@ export default function QuestionsPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-900">Loading…</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-900">Loading…</td></tr>
             )}
             {!loading && questions.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-900">No questions found.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-900">No questions found.</td></tr>
             )}
             {questions.map((q) => (
-              <tr key={q.id} className="border-b border-slate-100">
+              <tr key={q.id} className={`border-b border-slate-100 ${selected.has(q.id) ? "bg-red-50" : ""}`}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(q.id)}
+                    onChange={() => toggle(q.id)}
+                    aria-label={`Select question: ${q.question_en}`}
+                  />
+                </td>
                 <td className="max-w-md px-4 py-3">{q.question_en}</td>
                 <td className="px-4 py-3">{topics.find((t) => t.id === q.topic_id)?.name_en ?? "—"}</td>
                 <td className="px-4 py-3">
