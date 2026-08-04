@@ -45,7 +45,21 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
     supabase.from("exams").select("*").order("sort_order").then(({ data }) => setExams(data ?? []));
     supabase.from("papers").select("*").order("sort_order").then(({ data }) => setAllPapers(data ?? []));
     supabase.from("standards").select("*").order("sort_order").then(({ data }) => setStandards(data ?? []));
-    supabase.from("chapters").select("*").order("sort_order").then(({ data }) => setChapters(data ?? []));
+    supabase
+      .from("chapters")
+      .select("*")
+      .order("sort_order")
+      .then(({ data, error }) => {
+        if (error) {
+          setError(
+            error.message.includes("chapters")
+              ? "Chapters table missing — run supabase/migrations/0010_standards_and_chapters.sql in the SQL Editor first."
+              : error.message
+          );
+          return;
+        }
+        setChapters(data ?? []);
+      });
     if (questionId) {
       supabase.from("questions").select("*").eq("id", questionId).single().then(({ data }) => {
         if (data) {
