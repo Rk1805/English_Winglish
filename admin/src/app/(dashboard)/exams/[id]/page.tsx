@@ -2,13 +2,13 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { supabaseBrowser, type Category, type Exam, type Topic } from "@/lib/supabase";
-import { PageHeader, primaryBtn, secondaryBtn } from "@/components/form-controls";
+import { supabaseBrowser, type Category, type Exam, type Paper, type Topic } from "@/lib/supabase";
+import { inputCls, PageHeader, primaryBtn, secondaryBtn } from "@/components/form-controls";
 
 /**
- * Assign topics to an exam. Assigned topics appear as sections inside the
- * exam in the app, showing that topic's material + questions tagged with
- * both the topic and this exam.
+ * Assign topics to an exam, and optionally split PYQ practice into papers
+ * (e.g. GPSC has Paper-1 / Paper-2). Papers are optional — an exam with none
+ * shows a single "All Questions (PYQ)" card in the app instead.
  */
 export default function ExamTopicsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: examId } = use(params);
@@ -19,6 +19,27 @@ export default function ExamTopicsPage({ params }: { params: Promise<{ id: strin
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [paperForm, setPaperForm] = useState({ name_en: "", name_gu: "" });
+  const [paperError, setPaperError] = useState<string | null>(null);
+
+  async function loadPapers() {
+    const { data, error } = await supabaseBrowser()
+      .from("papers")
+      .select("*")
+      .eq("exam_id", examId)
+      .order("sort_order");
+    if (error) {
+      setPaperError(
+        error.message.includes("papers")
+          ? "Papers table missing — run supabase/migrations/0006_exam_papers.sql in the SQL Editor first."
+          : error.message
+      );
+      return;
+    }
+    setPapers(data ?? []);
+  }
 
   useEffect(() => {
     const supabase = supabaseBrowser();
@@ -40,7 +61,31 @@ export default function ExamTopicsPage({ params }: { params: Promise<{ id: strin
         }
         setSelected(new Set((data ?? []).map((r) => r.topic_id)));
       });
+    loadPapers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
+
+  async function addPaper() {
+    setPaperError(null);
+    const name = paperForm.name_en.trim();
+    if (!name) return;
+    const { error } = await supabaseBrowser().from("papers").insert({
+      exam_id: examId,
+      name_en: name,
+      name_gu: paperForm.name_gu.trim() || null,
+      sort_order: papers.length,
+    });
+    if (error) return setPaperError(error.message);
+    setPaperForm({ name_en: "", name_gu: "" });
+    loadPapers();
+  }
+
+  async function removePaper(paper: Paper) {
+    if (!confirm(`Delete paper "${paper.name_en}"? Questions keep their tags but this paper disappears from the app.`))
+      return;
+    await supabaseBrowser().from("papers").delete().eq("id", paper.id);
+    loadPapers();
+  }
 
   function toggle(topicId: string) {
     setSelected((prev) => {
@@ -74,18 +119,62 @@ export default function ExamTopicsPage({ params }: { params: Promise<{ id: strin
   return (
     <div>
       <PageHeader
-        title={exam ? `Topics inside ${exam.name_en}` : "Exam Topics"}
-        action={
-          <div className="flex items-center gap-3">
-            {savedMsg && <span className="text-sm font-medium text-green-600">Saved ✓</span>}
-            <span className="text-sm text-slate-900">{selected.size} selected</span>
-            <Link href="/exams" className={secondaryBtn}>← Back</Link>
-            <button className={primaryBtn} onClick={save} disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </button>
-          </div>
-        }
+        title={exam ? `${exam.name_en} — Setup` : "Exam Setup"}
+        action={<Link href="/exams" className={secondaryBtn}>← Back</Link>}
       />
+
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-sm">
+        <h2 className="mb-1 font-semibold text-slate-800">Papers (optional)</h2>
+        <p className="mb-3 text-sm text-slate-900">
+          Only needed if this exam is split into papers (e.g. GPSC Paper-1 / Paper-2). Leave empty
+          and students get a single &quot;All Questions (PYQ)&quot; button instead. Tag each question
+          to a paper from the question form.
+        </p>
+        {paperError && <p className="mb-3 text-sm text-red-600">{paperError}</p>}
+
+        {papers.length > 0 && (
+          <ul className="mb-3 space-y-2">
+            {papers.map((paper) => (
+              <li key={paper.id} className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <span className="flex-1 font-medium text-slate-900">
+                  {paper.name_en}
+                  {paper.name_gu && <span className="ml-2 text-slate-500">{paper.name_gu}</span>}
+                </span>
+                <button className="text-red-600 hover:underline" onClick={() => removePaper(paper)}>
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-sm font-medium text-slate-900">
+            Paper name (English)
+            <input className={inputCls} placeholder="Paper-1" value={paperForm.name_en}
+              onChange={(e) => setPaperForm({ ...paperForm, name_en: e.target.value })} />
+          </label>
+          <label className="text-sm font-medium text-slate-900">
+            Paper name (ગુજરાતી)
+            <input className={inputCls} placeholder="પેપર-1" value={paperForm.name_gu}
+              onChange={(e) => setPaperForm({ ...paperForm, name_gu: e.target.value })} />
+          </label>
+          <button className={primaryBtn} onClick={addPaper} disabled={!paperForm.name_en.trim()}>
+            + Add Paper
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-semibold text-slate-800">Topics inside this exam</h2>
+        <div className="flex items-center gap-3">
+          {savedMsg && <span className="text-sm font-medium text-green-600">Saved ✓</span>}
+          <span className="text-sm text-slate-900">{selected.size} selected</span>
+          <button className={primaryBtn} onClick={save} disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
 
       <p className="mb-4 text-sm text-slate-900">
         Ticked topics appear as sections inside this exam in the app. Students see the topic&apos;s

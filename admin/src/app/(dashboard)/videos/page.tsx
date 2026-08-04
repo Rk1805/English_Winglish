@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseBrowser, type Exam, type Topic, type Video } from "@/lib/supabase";
+import { supabaseBrowser, type Chapter, type Exam, type Standard, type Topic, type Video } from "@/lib/supabase";
 import {
   ActiveBadge,
   inputCls,
@@ -20,26 +20,55 @@ function parseYoutubeId(input: string): string {
   return match?.[1] ?? "";
 }
 
-const EMPTY = { title_en: "", title_gu: "", topic_id: "", exam_id: "", youtube: "", is_premium: false };
+const EMPTY = {
+  title_en: "",
+  title_gu: "",
+  topic_id: "",
+  exam_id: "",
+  chapter_id: "",
+  youtube: "",
+  is_premium: false,
+  video_category: "" as "" | "explanation" | "self_study" | "gala" | "grammar",
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+  explanation: "Explanation",
+  self_study: "Self-Study Notebook",
+  gala: "Gala",
+  grammar: "Grammar",
+};
 
 export default function VideosPage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [standards, setStandards] = useState<Standard[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     const supabase = supabaseBrowser();
-    const [{ data: videoRows }, { data: topicRows }, { data: examRows }] = await Promise.all([
-      supabase.from("videos").select("*").order("sort_order").order("created_at"),
-      supabase.from("topics").select("*").order("sort_order"),
-      supabase.from("exams").select("*").order("sort_order"),
-    ]);
+    const [{ data: videoRows }, { data: topicRows }, { data: examRows }, { data: stdRows }, { data: chapRows }] =
+      await Promise.all([
+        supabase.from("videos").select("*").order("sort_order").order("created_at"),
+        supabase.from("topics").select("*").order("sort_order"),
+        supabase.from("exams").select("*").order("sort_order"),
+        supabase.from("standards").select("*").order("sort_order"),
+        supabase.from("chapters").select("*").order("sort_order"),
+      ]);
     setVideos(videoRows ?? []);
     setTopics(topicRows ?? []);
     setExams(examRows ?? []);
+    setStandards(stdRows ?? []);
+    setChapters(chapRows ?? []);
+  }
+
+  function chapterLabel(chapter: Chapter) {
+    const std = standards.find((s) => s.id === chapter.standard_id);
+    const sem = chapter.semester === "sem1" ? "Sem-I" : "Sem-II";
+    return `Std ${std?.number ?? "?"} ${sem}: ${chapter.name_en}`;
   }
   useEffect(() => {
     load();
@@ -54,8 +83,10 @@ export default function VideosPage() {
       title_gu: form.title_gu.trim() || null,
       topic_id: form.topic_id || null,
       exam_id: form.exam_id || null,
+      chapter_id: form.chapter_id || null,
       youtube_id: youtubeId,
       is_premium: form.is_premium,
+      video_category: form.video_category || null,
     });
     if (error) return setError(error.message);
     setAdding(false);
@@ -105,6 +136,25 @@ export default function VideosPage() {
               {topics.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
             </select>
           </label>
+          <label className="text-sm font-medium text-slate-900">
+            Chapter
+            <select className={inputCls} value={form.chapter_id}
+              onChange={(e) => setForm({ ...form, chapter_id: e.target.value })}>
+              <option value="">— none —</option>
+              {chapters.map((c) => <option key={c.id} value={c.id}>{chapterLabel(c)}</option>)}
+            </select>
+          </label>
+          <label className="text-sm font-medium text-slate-900">
+            Video category
+            <select className={inputCls} value={form.video_category}
+              onChange={(e) => setForm({ ...form, video_category: e.target.value as typeof form.video_category })}>
+              <option value="">— none —</option>
+              <option value="explanation">Explanation</option>
+              <option value="self_study">Self-Study Notebook</option>
+              <option value="gala">Gala</option>
+              <option value="grammar">Grammar</option>
+            </select>
+          </label>
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-1 text-sm text-slate-900">
               <input type="checkbox" checked={form.is_premium}
@@ -120,7 +170,7 @@ export default function VideosPage() {
         </div>
       )}
 
-      <Table headers={["Title", "Video", "Topic", "Premium", "Status", ""]} empty={videos.length === 0}>
+      <Table headers={["Title", "Video", "Topic", "Chapter", "Category", "Premium", "Status", ""]} empty={videos.length === 0}>
         {videos.map((video) => (
           <tr key={video.id} className="border-b border-slate-100">
             <td className="px-4 py-3 font-medium">
@@ -134,6 +184,13 @@ export default function VideosPage() {
               </a>
             </td>
             <td className="px-4 py-3">{topics.find((t) => t.id === video.topic_id)?.name_en ?? "—"}</td>
+            <td className="px-4 py-3">
+              {(() => {
+                const chapter = chapters.find((c) => c.id === video.chapter_id);
+                return chapter ? chapterLabel(chapter) : "—";
+              })()}
+            </td>
+            <td className="px-4 py-3">{video.video_category ? CATEGORY_LABEL[video.video_category] : "—"}</td>
             <td className="px-4 py-3">{video.is_premium ? "Yes" : "No"}</td>
             <td className="px-4 py-3"><ActiveBadge active={video.is_active} /></td>
             <td className="px-4 py-3 text-right">

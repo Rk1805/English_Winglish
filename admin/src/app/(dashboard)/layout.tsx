@@ -12,6 +12,7 @@ const NAV = [
   { href: "/tests", label: "Mock Tests" },
   { href: "/exams", label: "Exams" },
   { href: "/categories", label: "Categories & Topics" },
+  { href: "/standards", label: "Standards & Chapters" },
   { href: "/pdfs", label: "PDFs" },
   { href: "/videos", label: "Videos" },
   { href: "/notes", label: "Notes" },

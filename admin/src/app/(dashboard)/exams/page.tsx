@@ -123,7 +123,7 @@ export default function ExamsPage() {
             <td className="px-4 py-3"><ActiveBadge active={exam.is_active} /></td>
             <td className="px-4 py-3 text-right whitespace-nowrap">
               <Link href={`/exams/${exam.id}`} className="mr-3 text-green-700 hover:underline">
-                Topics
+                Setup
               </Link>
               <button className="mr-3 text-blue-600 hover:underline" onClick={() => startEdit(exam)}>
                 Edit

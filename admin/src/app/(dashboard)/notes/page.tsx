@@ -11,7 +11,14 @@ import {
   Table,
 } from "@/components/form-controls";
 
-const EMPTY = { title_en: "", title_gu: "", topic_id: "", body_md: "", is_premium: false };
+const EMPTY = {
+  title_en: "",
+  title_gu: "",
+  topic_id: "",
+  body_md: "",
+  is_premium: false,
+  section: "" as "" | "summary" | "important_points",
+};
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -43,6 +50,7 @@ export default function NotesPage() {
         topic_id: note.topic_id ?? "",
         body_md: note.body_md,
         is_premium: note.is_premium,
+        section: note.section ?? "",
       });
     } else {
       setEditing("new");
@@ -58,6 +66,7 @@ export default function NotesPage() {
       topic_id: form.topic_id || null,
       body_md: form.body_md,
       is_premium: form.is_premium,
+      section: form.section || null,
     };
     const supabase = supabaseBrowser();
     const { error } =
@@ -114,6 +123,15 @@ export default function NotesPage() {
             </label>
           </div>
           <label className="block text-sm font-medium text-slate-900">
+            Textbook section — where this note appears on the topic&apos;s Textbook page
+            <select className={inputCls} value={form.section}
+              onChange={(e) => setForm({ ...form, section: e.target.value as typeof form.section })}>
+              <option value="">General (shows under Grammar)</option>
+              <option value="summary">Summary</option>
+              <option value="important_points">Important Points</option>
+            </select>
+          </label>
+          <label className="block text-sm font-medium text-slate-900">
             Content (Markdown supported — headings with #, lists with -, **bold**)
             <textarea rows={10} className={inputCls + " font-mono"} value={form.body_md}
               onChange={(e) => setForm({ ...form, body_md: e.target.value })} />
@@ -128,7 +146,7 @@ export default function NotesPage() {
         </div>
       )}
 
-      <Table headers={["Title", "Topic", "Premium", "Status", ""]} empty={notes.length === 0}>
+      <Table headers={["Title", "Topic", "Section", "Premium", "Status", ""]} empty={notes.length === 0}>
         {notes.map((note) => (
           <tr key={note.id} className="border-b border-slate-100">
             <td className="px-4 py-3 font-medium">
@@ -136,6 +154,13 @@ export default function NotesPage() {
               {note.title_gu && <span className="ml-2 text-slate-900">{note.title_gu}</span>}
             </td>
             <td className="px-4 py-3">{topics.find((t) => t.id === note.topic_id)?.name_en ?? "—"}</td>
+            <td className="px-4 py-3">
+              {note.section === "summary"
+                ? "Summary"
+                : note.section === "important_points"
+                  ? "Important Points"
+                  : "General"}
+            </td>
             <td className="px-4 py-3">{note.is_premium ? "Yes" : "No"}</td>
             <td className="px-4 py-3"><ActiveBadge active={note.is_active} /></td>
             <td className="px-4 py-3 text-right whitespace-nowrap">

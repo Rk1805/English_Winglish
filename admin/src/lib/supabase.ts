@@ -34,6 +34,35 @@ export type Topic = {
   is_active: boolean;
 };
 
+export type EducationLevel = "primary" | "upper_primary" | "secondary" | "higher_secondary";
+
+export type Standard = {
+  id: string;
+  number: number;
+  education_level: EducationLevel;
+  sort_order: number;
+  is_active: boolean;
+};
+
+export type Chapter = {
+  id: string;
+  standard_id: string;
+  semester: "sem1" | "sem2";
+  name_en: string;
+  name_gu: string | null;
+  pdf_storage_path: string | null;
+  sort_order: number;
+  is_active: boolean;
+};
+
+export type Paper = {
+  id: string;
+  exam_id: string;
+  name_en: string;
+  name_gu: string | null;
+  sort_order: number;
+};
+
 export type Test = {
   id: string;
   title_en: string;
@@ -63,10 +92,12 @@ export type Video = {
   title_gu: string | null;
   topic_id: string | null;
   exam_id: string | null;
+  chapter_id: string | null;
   youtube_id: string;
   is_premium: boolean;
   is_active: boolean;
   sort_order: number;
+  video_category: "explanation" | "self_study" | "gala" | "grammar" | null;
 };
 
 export type Note = {
@@ -78,6 +109,7 @@ export type Note = {
   is_premium: boolean;
   is_active: boolean;
   sort_order: number;
+  section: "summary" | "important_points" | null;
 };
 
 export type Profile = {
@@ -102,6 +134,7 @@ export type QuestionReport = {
 export type Question = {
   id: string;
   topic_id: string | null;
+  chapter_id: string | null;
   exam_ids: string[];
   year: number | null;
   question_en: string;

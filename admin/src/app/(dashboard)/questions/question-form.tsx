@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowser, type Question, type Topic, type Exam } from "@/lib/supabase";
+import { supabaseBrowser, type Chapter, type Exam, type Paper, type Question, type Standard, type Topic } from "@/lib/supabase";
 
 const EMPTY: Omit<Question, "id" | "created_at"> = {
   topic_id: null,
+  chapter_id: null,
   exam_ids: [],
   year: null,
   question_en: "",
@@ -25,13 +26,26 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
   const [form, setForm] = useState(EMPTY);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [allPapers, setAllPapers] = useState<Paper[]>([]);
+  const [standards, setStandards] = useState<Standard[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [selectedPaperIds, setSelectedPaperIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function chapterLabel(chapter: Chapter) {
+    const std = standards.find((s) => s.id === chapter.standard_id);
+    const sem = chapter.semester === "sem1" ? "Sem-I" : "Sem-II";
+    return `Std ${std?.number ?? "?"} ${sem}: ${chapter.name_en}`;
+  }
 
   useEffect(() => {
     const supabase = supabaseBrowser();
     supabase.from("topics").select("*").order("sort_order").then(({ data }) => setTopics(data ?? []));
     supabase.from("exams").select("*").order("sort_order").then(({ data }) => setExams(data ?? []));
+    supabase.from("papers").select("*").order("sort_order").then(({ data }) => setAllPapers(data ?? []));
+    supabase.from("standards").select("*").order("sort_order").then(({ data }) => setStandards(data ?? []));
+    supabase.from("chapters").select("*").order("sort_order").then(({ data }) => setChapters(data ?? []));
     if (questionId) {
       supabase.from("questions").select("*").eq("id", questionId).single().then(({ data }) => {
         if (data) {
@@ -45,8 +59,36 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
           });
         }
       });
+      supabase
+        .from("question_papers")
+        .select("paper_id")
+        .eq("question_id", questionId)
+        .then(({ data }) => setSelectedPaperIds(new Set((data ?? []).map((r) => r.paper_id))));
     }
   }, [questionId]);
+
+  // Keep paper selections in sync with which exams are still ticked.
+  useEffect(() => {
+    setSelectedPaperIds((prev) => {
+      const stillValid = new Set(
+        allPapers.filter((p) => form.exam_ids.includes(p.exam_id)).map((p) => p.id)
+      );
+      const next = new Set([...prev].filter((id) => stillValid.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.exam_ids, allPapers]);
+
+  const availablePapers = allPapers.filter((p) => form.exam_ids.includes(p.exam_id));
+
+  function togglePaper(paperId: string) {
+    setSelectedPaperIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(paperId)) next.delete(paperId);
+      else next.add(paperId);
+      return next;
+    });
+  }
 
   function set<K extends keyof typeof EMPTY>(key: K, value: (typeof EMPTY)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -55,8 +97,8 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.topic_id && form.exam_ids.length === 0) {
-      setError("Select a topic (grammar) or at least one exam (PYQ).");
+    if (!form.topic_id && form.exam_ids.length === 0 && !form.chapter_id) {
+      setError("Select a topic (grammar), a chapter (Textbook), or at least one exam (PYQ).");
       return;
     }
     if (form.options_en.some((o) => !o.trim())) {
@@ -73,14 +115,29 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
       options_gu: form.options_gu?.every((o) => o.trim()) ? form.options_gu : null,
       year: form.year || null,
     };
-    const { error } = questionId
+    const result = questionId
       ? await supabase.from("questions").update(payload).eq("id", questionId)
-      : await supabase.from("questions").insert(payload);
-    setSaving(false);
-    if (error) {
-      setError(error.message);
+      : await supabase.from("questions").insert(payload).select("id").single();
+    if (result.error) {
+      setSaving(false);
+      setError(result.error.message);
       return;
     }
+    const savedId = questionId ?? (result.data as { id: string } | null)?.id;
+    if (savedId) {
+      await supabase.from("question_papers").delete().eq("question_id", savedId);
+      if (selectedPaperIds.size > 0) {
+        const { error: paperError } = await supabase
+          .from("question_papers")
+          .insert([...selectedPaperIds].map((paper_id) => ({ question_id: savedId, paper_id })));
+        if (paperError) {
+          setSaving(false);
+          setError(paperError.message);
+          return;
+        }
+      }
+    }
+    setSaving(false);
     router.push("/questions");
   }
 
@@ -89,12 +146,19 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
 
   return (
     <form onSubmit={save} className="max-w-3xl space-y-5 rounded-xl bg-white p-6 shadow-sm">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <label className={label}>
           Topic (grammar)
           <select value={form.topic_id ?? ""} onChange={(e) => set("topic_id", e.target.value || null)} className={input}>
             <option value="">— none —</option>
             {topics.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
+          </select>
+        </label>
+        <label className={label}>
+          Chapter (Textbook)
+          <select value={form.chapter_id ?? ""} onChange={(e) => set("chapter_id", e.target.value || null)} className={input}>
+            <option value="">— none —</option>
+            {chapters.map((c) => <option key={c.id} value={c.id}>{chapterLabel(c)}</option>)}
           </select>
         </label>
         <label className={label}>
@@ -136,6 +200,28 @@ export default function QuestionForm({ questionId }: { questionId?: string }) {
           ))}
         </div>
       </fieldset>
+
+      {availablePapers.length > 0 && (
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium text-slate-900">
+            Papers — which paper(s) of the selected exam(s) is this from? (optional)
+          </legend>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-slate-200 p-3 sm:grid-cols-3 lg:grid-cols-4">
+            {availablePapers.map((paper) => (
+              <label key={paper.id} className="flex items-center gap-2 text-sm text-slate-900">
+                <input
+                  type="checkbox"
+                  checked={selectedPaperIds.has(paper.id)}
+                  onChange={() => togglePaper(paper.id)}
+                />
+                {paper.name_en} <span className="text-slate-500">
+                  ({exams.find((x) => x.id === paper.exam_id)?.name_en})
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <label className={label}>
