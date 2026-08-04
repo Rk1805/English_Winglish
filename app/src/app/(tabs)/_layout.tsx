@@ -21,6 +21,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="textbook"
+        options={{
+          title: gu ? 'ટેક્સ્ટબુક' : 'Textbook',
+          tabBarIcon: ({ color, size }) => <Ionicons name="albums" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="exams"
         options={{
           title: gu ? 'પરીક્ષા' : 'Exams',

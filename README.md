@@ -26,6 +26,12 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
    - `supabase/migrations/0002_storage.sql` (PDF storage bucket)
    - `supabase/migrations/0003_analytics_and_reports.sql` (usage analytics + in-app question reports)
    - `supabase/migrations/0004_multi_exam_topics_leaderboard.sql` (multi-exam questions, topics inside exams, mock-test leaderboard)
+   - `supabase/migrations/0005_random_questions.sql` (true random question sampling — fixes practice sets being dominated by one topic)
+   - `supabase/migrations/0006_exam_papers.sql` (optional per-exam Paper-1/Paper-2 split + unlimited-practice random sampling)
+   - `supabase/migrations/0007_textbook_sections.sql` (Summary / Important Points tagging for notes, powers the Textbook page)
+   - `supabase/migrations/0008_grammar_wide_mcqs.sql` (category-wide random sampling — powers "Grammar MCQs" as distinct from "Unit Test")
+   - `supabase/migrations/0009_textbook_hierarchy.sql` (videos.video_category for Explanation/Self-Study/Gala/Grammar video sections — superseded topics.semester, see 0010)
+   - `supabase/migrations/0010_standards_and_chapters.sql` (real Std 1-12 + Chapters, separate from Grammar categories/topics — the actual Textbook tab structure; also drops the wrong topics.semester column from 0009)
    - `supabase/seed.sql` (loads all exams + grammar categories/topics + 2 sample questions)
 
 3. In **Authentication → Users**, create the admin user (email + password),

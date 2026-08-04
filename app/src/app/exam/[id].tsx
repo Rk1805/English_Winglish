@@ -3,55 +3,89 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ErrorView, LoadingView, useAsyncData } from '@/components/async-view';
-import { fetchExamTopics } from '@/lib/content';
+import { fetchExamPapers, fetchExamTopics } from '@/lib/content';
 import { useLanguage } from '@/lib/language';
 import { loc } from '@/lib/models';
 import { Brand } from '@/lib/theme';
 
-/** Exam hub: all-PYQ practice plus the topics the admin assigned to this exam. */
+/**
+ * Exam hub: PYQ practice (split into papers if the admin configured any,
+ * e.g. GPSC Paper-1/Paper-2 — otherwise a single "All Questions" card) plus
+ * the topics the admin assigned to this exam.
+ */
 export default function ExamScreen() {
   const router = useRouter();
   const { gu } = useLanguage();
   const { id, title } = useLocalSearchParams<{ id: string; title?: string }>();
-  const { data: topics, error } = useAsyncData(() => fetchExamTopics(id), [id]);
   const examTitle = title ?? 'Exam';
+  const { data, error } = useAsyncData(async () => {
+    const [topics, papers] = await Promise.all([fetchExamTopics(id), fetchExamPapers(id)]);
+    return { topics, papers };
+  }, [id]);
 
   return (
     <View style={styles.screen}>
       <Stack.Screen options={{ title: examTitle }} />
       {error ? (
         <ErrorView message={error} />
-      ) : !topics ? (
+      ) : !data ? (
         <LoadingView />
       ) : (
         <FlatList
-          data={topics}
+          data={data.topics}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <>
-              <Pressable
-                style={styles.allCard}
-                onPress={() =>
-                  router.push({
-                    pathname: '/quiz-setup',
-                    params: { source: 'exam', id, title: examTitle },
-                  })
-                }>
-                <Ionicons name="documents" size={26} color={Brand.yellow} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.allTitle}>
-                    {gu ? 'બધા પ્રશ્નો (PYQ)' : 'All Questions (PYQ)'}
-                  </Text>
-                  <Text style={styles.allSub}>
-                    {gu
-                      ? `${examTitle} ના બધા પાછલા વર્ષોના પ્રશ્નો`
-                      : `All previous year questions of ${examTitle}`}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
-              </Pressable>
-              {topics.length > 0 && (
+              {data.papers.length > 0 ? (
+                data.papers.map((paper) => (
+                  <Pressable
+                    key={paper.id}
+                    style={styles.allCard}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/quiz-setup',
+                        params: {
+                          source: 'exam_paper',
+                          id: paper.id,
+                          title: `${loc(gu, paper.name_en, paper.name_gu)} · ${examTitle}`,
+                        },
+                      })
+                    }>
+                    <Ionicons name="documents" size={26} color={Brand.yellow} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.allTitle}>{loc(gu, paper.name_en, paper.name_gu)}</Text>
+                      <Text style={styles.allSub}>
+                        {gu ? 'PYQ પ્રશ્નો' : 'PYQ questions'}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+                  </Pressable>
+                ))
+              ) : (
+                <Pressable
+                  style={styles.allCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/quiz-setup',
+                      params: { source: 'exam', id, title: examTitle },
+                    })
+                  }>
+                  <Ionicons name="documents" size={26} color={Brand.yellow} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.allTitle}>
+                      {gu ? 'બધા પ્રશ્નો (PYQ)' : 'All Questions (PYQ)'}
+                    </Text>
+                    <Text style={styles.allSub}>
+                      {gu
+                        ? `${examTitle} ના બધા પાછલા વર્ષોના પ્રશ્નો`
+                        : `All previous year questions of ${examTitle}`}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+                </Pressable>
+              )}
+              {data.topics.length > 0 && (
                 <Text style={styles.sectionTitle}>{gu ? 'વિષય પ્રમાણે' : 'By Topic'}</Text>
               )}
             </>

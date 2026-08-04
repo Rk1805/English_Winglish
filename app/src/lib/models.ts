@@ -19,6 +19,30 @@ export type Topic = {
   name_gu: string | null;
 };
 
+export type EducationLevel = 'primary' | 'upper_primary' | 'secondary' | 'higher_secondary';
+
+export type Standard = {
+  id: string;
+  number: number;
+  education_level: EducationLevel;
+};
+
+export type Chapter = {
+  id: string;
+  standard_id: string;
+  semester: 'sem1' | 'sem2';
+  name_en: string;
+  name_gu: string | null;
+  pdf_storage_path: string | null;
+};
+
+export type Paper = {
+  id: string;
+  exam_id: string;
+  name_en: string;
+  name_gu: string | null;
+};
+
 export type Question = {
   id: string;
   topic_id: string | null;
@@ -75,6 +99,7 @@ export type Video = {
   exam_id: string | null;
   youtube_id: string;
   is_premium: boolean;
+  video_category: 'explanation' | 'self_study' | 'gala' | 'grammar' | null;
 };
 
 export type Note = {
@@ -84,6 +109,7 @@ export type Note = {
   topic_id: string | null;
   body_md: string;
   is_premium: boolean;
+  section: 'summary' | 'important_points' | null;
 };
 
 /** Pick the Gujarati text when the toggle is on and a translation exists. */

@@ -7,7 +7,18 @@ import { useLanguage } from '@/lib/language';
 import { loc, Note, Pdf, Video } from '@/lib/models';
 import { Brand } from '@/lib/theme';
 
-/** Videos / PDFs / Notes lists — used by the Study tab and topic/exam screens. */
+export function usePremiumAlert() {
+  const { gu } = useLanguage();
+  return () =>
+    Alert.alert(
+      gu ? 'પ્રીમિયમ' : 'Premium',
+      gu
+        ? 'આ સામગ્રી પ્રીમિયમ સભ્યો માટે છે. ટૂંક સમયમાં આવી રહ્યું છે!'
+        : 'This content is for premium members. Coming soon!'
+    );
+}
+
+/** Videos / PDFs / Notes lists — used by the Study tab and the Textbook page's "Grammar" section. */
 export function MaterialSections({
   videos,
   pdfs,
@@ -17,17 +28,8 @@ export function MaterialSections({
   pdfs: Pdf[];
   notes: Note[];
 }) {
-  const router = useRouter();
   const { gu } = useLanguage();
-
-  function premiumAlert() {
-    Alert.alert(
-      gu ? 'પ્રીમિયમ' : 'Premium',
-      gu
-        ? 'આ સામગ્રી પ્રીમિયમ સભ્યો માટે છે. ટૂંક સમયમાં આવી રહ્યું છે!'
-        : 'This content is for premium members. Coming soon!'
-    );
-  }
+  const premiumAlert = usePremiumAlert();
 
   return (
     <>
@@ -68,18 +70,7 @@ export function MaterialSections({
       {notes.length > 0 && (
         <Section title={gu ? 'નોટ્સ' : 'Notes'}>
           {notes.map((note) => (
-            <Row
-              key={note.id}
-              icon="reader"
-              iconColor={Brand.navy}
-              title={loc(gu, note.title_en, note.title_gu)}
-              locked={note.is_premium}
-              onPress={() =>
-                note.is_premium
-                  ? premiumAlert()
-                  : router.push({ pathname: '/note/[id]', params: { id: note.id } })
-              }
-            />
+            <NoteRow key={note.id} note={note} />
           ))}
         </Section>
       )}
@@ -87,7 +78,28 @@ export function MaterialSections({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/** A single note row: opens the in-app markdown reader, or a premium alert. */
+export function NoteRow({ note }: { note: Note }) {
+  const router = useRouter();
+  const { gu } = useLanguage();
+  const premiumAlert = usePremiumAlert();
+  return (
+    <Row
+      icon="reader"
+      iconColor={Brand.navy}
+      title={loc(gu, note.title_en, note.title_gu)}
+      locked={note.is_premium}
+      onPress={() =>
+        note.is_premium
+          ? premiumAlert()
+          : router.push({ pathname: '/note/[id]', params: { id: note.id } })
+      }
+    />
+  );
+}
+
+/** Exported so screens like Textbook can compose custom-titled groups with the same look. */
+export function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -96,7 +108,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({
+export function Row({
   icon,
   iconColor,
   title,

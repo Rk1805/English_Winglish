@@ -2,96 +2,124 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useAsyncData } from '@/components/async-view';
-import { MaterialSections } from '@/components/material-sections';
-import { fetchNotes, fetchPdfs, fetchVideos, MaterialFilter } from '@/lib/content';
+import { PracticeSets, QuizPushSource } from '@/components/practice-sets';
 import { useLanguage } from '@/lib/language';
 import { Brand } from '@/lib/theme';
 
 /**
- * Topic / exam hub: study material for the topic (videos, PDFs, notes)
- * followed by the practice sets.
+ * Topic / exam hub: entry points into the Textbook, Videos, the Question
+ * Bank (revision list), and the timed/scored practice sets. For a plain
+ * grammar topic (has a categoryId), MCQs split into a Unit Test (this
+ * lesson only) and Grammar MCQs (every topic in the lesson's category).
  */
 export default function QuizSetupScreen() {
   const router = useRouter();
   const { gu } = useLanguage();
-  const { source, id, examId, title } = useLocalSearchParams<{
-    source: 'topic' | 'exam' | 'exam_topic' | 'random';
+  const { source, id, examId, categoryId, categoryTitle, title } = useLocalSearchParams<{
+    source: QuizPushSource;
     id?: string;
     examId?: string;
+    categoryId?: string;
+    categoryTitle?: string;
     title?: string;
   }>();
 
-  // exam_topic shows the topic's study material; questions are filtered later.
-  const filter: MaterialFilter | null =
-    (source === 'topic' || source === 'exam_topic') && id
-      ? { topicId: id }
-      : source === 'exam' && id
-        ? { examId: id }
-        : null;
-
-  const { data: material } = useAsyncData(async () => {
-    if (!filter) return { videos: [], pdfs: [], notes: [] };
-    const [videos, pdfs, notes] = await Promise.all([
-      fetchVideos(filter),
-      fetchPdfs(filter),
-      fetchNotes(filter),
-    ]);
-    return { videos, pdfs, notes };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, id]);
-
-  const hasMaterial =
-    !!material && (material.videos.length > 0 || material.pdfs.length > 0 || material.notes.length > 0);
-
-  const sets: { label: string; count: string; icon: 'help-circle' | 'shuffle' | 'infinite' }[] = [
-    { label: gu ? '૫૦ પ્રશ્નો' : '50 MCQs', count: '50', icon: 'help-circle' },
-    { label: gu ? '૧૦૦ પ્રશ્નો' : '100 MCQs', count: '100', icon: 'help-circle' },
-    { label: gu ? '૨૦૦ પ્રશ્નો' : '200 MCQs', count: '200', icon: 'help-circle' },
-    { label: gu ? 'રેન્ડમ (૨૦)' : 'Random (20)', count: '20', icon: 'shuffle' },
-    { label: gu ? 'અમર્યાદિત પ્રેક્ટિસ' : 'Unlimited Practice', count: 'all', icon: 'infinite' },
-  ];
+  const showTextbook = source === 'topic' || source === 'exam_topic';
+  const showVideos = source === 'topic' || source === 'exam' || source === 'exam_topic';
+  const showQuestionBank = source !== 'random';
+  const showUnitGrammarSplit = source === 'topic' && !!categoryId;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: title ?? 'Practice' }} />
 
-      {hasMaterial && (
-        <>
-          <Text style={styles.heading}>
-            {gu ? `શીખો — ${title ?? ''}` : `Learn — ${title ?? ''}`}
-          </Text>
-          <MaterialSections videos={material.videos} pdfs={material.pdfs} notes={material.notes} />
-          <View style={styles.divider} />
-        </>
-      )}
-
-      <Text style={styles.heading}>{gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}</Text>
-      {sets.map((set) => (
+      {showTextbook && (
         <Pressable
-          key={set.label}
-          style={styles.card}
+          style={[styles.entryCard, { backgroundColor: Brand.navy }]}
           onPress={() =>
             router.push({
-              pathname: '/quiz',
+              pathname: '/textbook-content',
+              params: { topicId: id ?? '', examId: examId ?? '', title: title ?? '' },
+            })
+          }>
+          <Ionicons name="book" size={24} color={Brand.yellow} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.entryTitle}>{gu ? 'ટેક્સ્ટબુક' : 'Textbook'}</Text>
+            <Text style={styles.entrySub}>
+              {gu ? 'સારાંશ, મુદ્દા અને વ્યાકરણ' : 'Summary, key points & grammar'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+        </Pressable>
+      )}
+
+      {showVideos && (
+        <Pressable
+          style={[styles.entryCard, { backgroundColor: '#B8541F' }]}
+          onPress={() =>
+            router.push({
+              pathname: '/videos',
               params: {
-                source,
-                id: id ?? '',
-                examId: examId ?? '',
+                topicId: source === 'exam' ? '' : (id ?? ''),
+                examId: source === 'exam' ? (id ?? '') : (examId ?? ''),
                 title: title ?? '',
-                count: set.count,
               },
             })
           }>
-          <Ionicons name={set.icon} size={22} color={set.count === 'all' ? Brand.navy : Brand.red} />
-          <Text style={styles.cardTitle}>{set.label}</Text>
-          <Ionicons
-            name="play-circle"
-            size={30}
-            color={set.count === 'all' ? Brand.navy : Brand.red}
-          />
+          <Ionicons name="logo-youtube" size={24} color="#fff" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.entryTitle}>{gu ? 'વિડિયો' : 'Videos'}</Text>
+            <Text style={styles.entrySub}>{gu ? 'સમજૂતી વિડિયો જુઓ' : 'Watch explanation videos'}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
         </Pressable>
-      ))}
+      )}
+
+      {showQuestionBank && (
+        <Pressable
+          style={[styles.entryCard, { backgroundColor: '#3A3F4B' }]}
+          onPress={() =>
+            router.push({
+              pathname: '/question-bank',
+              params: { source, id: id ?? '', examId: examId ?? '', title: title ?? '' },
+            })
+          }>
+          <Ionicons name="library" size={24} color={Brand.yellow} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.entryTitle}>{gu ? 'પ્રશ્ન બેંક' : 'Question Bank'}</Text>
+            <Text style={styles.entrySub}>
+              {gu ? 'બધા પ્રશ્નો જવાબ સાથે વાંચો' : 'Browse every question with its answer'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+        </Pressable>
+      )}
+
+      {showUnitGrammarSplit ? (
+        <>
+          <PracticeSets
+            heading={gu ? 'એકમ કસોટી (આ પાઠ)' : 'Unit Test (this lesson)'}
+            source="topic"
+            id={id ?? ''}
+            title={title ?? ''}
+          />
+          <PracticeSets
+            heading={gu ? 'વ્યાકરણ MCQs (આખો વિભાગ)' : 'Grammar MCQs (whole category)'}
+            source="category"
+            id={categoryId ?? ''}
+            title={categoryTitle || (gu ? 'વ્યાકરણ' : 'Grammar')}
+          />
+        </>
+      ) : (
+        <PracticeSets
+          heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}
+          source={source}
+          id={id ?? ''}
+          examId={examId}
+          title={title ?? ''}
+        />
+      )}
+
       <View style={styles.note}>
         <Ionicons name="information-circle-outline" size={16} color={Brand.textMuted} />
         <Text style={styles.noteText}>
@@ -107,19 +135,15 @@ export default function QuizSetupScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Brand.background },
   content: { padding: 16, gap: 10, paddingBottom: 32 },
-  heading: { fontSize: 16, fontWeight: '700', color: '#222', marginBottom: 4 },
-  divider: { height: 1, backgroundColor: Brand.border, marginVertical: 10 },
-  card: {
-    backgroundColor: Brand.card,
-    borderRadius: 12,
+  entryCard: {
+    borderRadius: 14,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderWidth: 1,
-    borderColor: Brand.border,
   },
-  cardTitle: { flex: 1, fontSize: 16, fontWeight: '600', color: '#222' },
+  entryTitle: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  entrySub: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, paddingHorizontal: 4 },
   noteText: { color: Brand.textMuted, fontSize: 12, flex: 1 },
 });
