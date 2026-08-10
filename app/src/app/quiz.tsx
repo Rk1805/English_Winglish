@@ -23,7 +23,7 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 export default function QuizScreen() {
   const { gu } = useLanguage();
   const params = useLocalSearchParams<{
-    source: 'topic' | 'exam' | 'exam_topic' | 'exam_paper' | 'category' | 'chapter' | 'random';
+    source: 'topic' | 'exam' | 'exam_topic' | 'exam_paper' | 'chapter' | 'grammar_bank' | 'random';
     id?: string;
     examId?: string;
     title?: string;
@@ -36,8 +36,8 @@ export default function QuizScreen() {
     if (params.source === 'exam_topic')
       return { kind: 'exam_topic', topicId: params.id ?? '', examId: params.examId ?? '' };
     if (params.source === 'exam_paper') return { kind: 'exam_paper', paperId: params.id ?? '' };
-    if (params.source === 'category') return { kind: 'category', id: params.id ?? '' };
     if (params.source === 'chapter') return { kind: 'chapter', id: params.id ?? '' };
+    if (params.source === 'grammar_bank') return { kind: 'grammar_bank' };
     return { kind: 'random' };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.source, params.id, params.examId]);

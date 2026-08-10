@@ -8,26 +8,24 @@ import { Brand } from '@/lib/theme';
 
 /**
  * Topic / exam hub: entry points into the Textbook, Videos, the Question
- * Bank (revision list), and the timed/scored practice sets. For a plain
- * grammar topic (has a categoryId), MCQs split into a Unit Test (this
- * lesson only) and Grammar MCQs (every topic in the lesson's category).
+ * Bank (revision list), and the timed/scored practice sets. A plain grammar
+ * topic (source 'topic', reached from the Grammar tab) shows a single
+ * "Grammar MCQs" section sourced from the dedicated Grammar Question Bank —
+ * not this specific topic — since that bank is shared across every topic.
  */
 export default function QuizSetupScreen() {
   const router = useRouter();
   const { gu } = useLanguage();
-  const { source, id, examId, categoryId, categoryTitle, title } = useLocalSearchParams<{
+  const { source, id, examId, title } = useLocalSearchParams<{
     source: QuizPushSource;
     id?: string;
     examId?: string;
-    categoryId?: string;
-    categoryTitle?: string;
     title?: string;
   }>();
 
   const showTextbook = source === 'topic' || source === 'exam_topic';
   const showVideos = source === 'topic' || source === 'exam' || source === 'exam_topic';
   const showQuestionBank = source !== 'random';
-  const showUnitGrammarSplit = source === 'topic' && !!categoryId;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -95,21 +93,14 @@ export default function QuizSetupScreen() {
         </Pressable>
       )}
 
-      {showUnitGrammarSplit ? (
-        <>
-          <PracticeSets
-            heading={gu ? 'એકમ કસોટી (આ પાઠ)' : 'Unit Test (this lesson)'}
-            source="topic"
-            id={id ?? ''}
-            title={title ?? ''}
-          />
-          <PracticeSets
-            heading={gu ? 'વ્યાકરણ MCQs (આખો વિભાગ)' : 'Grammar MCQs (whole category)'}
-            source="category"
-            id={categoryId ?? ''}
-            title={categoryTitle || (gu ? 'વ્યાકરણ' : 'Grammar')}
-          />
-        </>
+      {source === 'topic' ? (
+        <PracticeSets
+          heading={gu ? 'વ્યાકરણ MCQs' : 'Grammar MCQs'}
+          source="grammar_bank"
+          id=""
+          title={gu ? 'વ્યાકરણ' : 'Grammar'}
+          variant="grammar"
+        />
       ) : (
         <PracticeSets
           heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}

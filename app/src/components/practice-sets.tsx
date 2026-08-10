@@ -10,30 +10,41 @@ export type QuizPushSource =
   | 'exam'
   | 'exam_topic'
   | 'exam_paper'
-  | 'category'
   | 'chapter'
+  | 'grammar_bank'
   | 'random';
 
-/** The 10/15/25/Random/Unlimited card list — shared by the topic hub and the chapter resource menu. */
+/**
+ * The practice-set count picker — shared by the topic hub and the chapter
+ * resource menu. "textbook" (default) = 10/15/25/Random/Unlimited, used for
+ * chapter Unit Tests and chapter Grammar MCQs. "grammar" =
+ * 25/50/100/Random/Unlimited, used only by the Grammar tab's single MCQ
+ * section, so the two never look like the same picker.
+ */
 export function PracticeSets({
   heading,
   source,
   id,
   examId,
   title,
+  variant = 'textbook',
 }: {
   heading: string;
   source: QuizPushSource;
   id: string;
   examId?: string;
   title: string;
+  variant?: 'textbook' | 'grammar';
 }) {
   const router = useRouter();
   const { gu } = useLanguage();
+  const numbers = variant === 'grammar' ? [25, 50, 100] : [10, 15, 25];
   const sets: { label: string; count: string; icon: 'help-circle' | 'shuffle' | 'infinite' }[] = [
-    { label: gu ? '૧૦ પ્રશ્નો' : '10 Questions', count: '10', icon: 'help-circle' },
-    { label: gu ? '૧૫ પ્રશ્નો' : '15 Questions', count: '15', icon: 'help-circle' },
-    { label: gu ? '૨૫ પ્રશ્નો' : '25 Questions', count: '25', icon: 'help-circle' },
+    ...numbers.map((n) => ({
+      label: gu ? `${n} પ્રશ્નો` : `${n} Questions`,
+      count: String(n),
+      icon: 'help-circle' as const,
+    })),
     { label: gu ? 'રેન્ડમ' : 'Random', count: '20', icon: 'shuffle' },
     { label: gu ? 'અમર્યાદિત પ્રેક્ટિસ' : 'Unlimited Practice', count: 'all', icon: 'infinite' },
   ];

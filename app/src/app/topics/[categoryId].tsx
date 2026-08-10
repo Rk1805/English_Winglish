@@ -35,8 +35,6 @@ export default function TopicListScreen() {
                   params: {
                     source: 'topic',
                     id: item.id,
-                    categoryId,
-                    categoryTitle: title ?? '',
                     title: loc(gu, item.name_en, item.name_gu),
                   },
                 })
