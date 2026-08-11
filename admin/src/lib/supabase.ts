@@ -131,26 +131,6 @@ export type QuestionReport = {
   created_at: string;
 };
 
-/**
- * Grammar Question Bank — fully independent of topic_id/exam_ids/chapter_id.
- * Powers the single "Grammar MCQs" option in the Grammar tab and the
- * "Grammar MCQs" option inside every Textbook chapter (same shared pool).
- */
-export type GrammarQuestion = {
-  id: string;
-  question_en: string;
-  question_gu: string | null;
-  options_en: string[];
-  options_gu: string[] | null;
-  correct_index: number;
-  explanation_en: string | null;
-  explanation_gu: string | null;
-  difficulty: "easy" | "medium" | "hard";
-  is_premium: boolean;
-  is_active: boolean;
-  created_at: string;
-};
-
 export type Question = {
   id: string;
   topic_id: string | null;

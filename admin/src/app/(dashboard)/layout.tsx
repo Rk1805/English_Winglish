@@ -9,7 +9,6 @@ const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/analytics", label: "Analytics" },
   { href: "/questions", label: "Questions" },
-  { href: "/grammar-mcqs", label: "Grammar Question Bank" },
   { href: "/tests", label: "Mock Tests" },
   { href: "/exams", label: "Exams" },
   { href: "/categories", label: "Categories & Topics" },
