@@ -34,6 +34,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
    - `supabase/migrations/0010_standards_and_chapters.sql` (real Std 1-12 + Chapters, separate from Grammar categories/topics — the actual Textbook tab structure; also drops the wrong topics.semester column from 0009)
    - `supabase/migrations/0011_grammar_question_bank.sql` (superseded — see 0012)
    - `supabase/migrations/0012_revert_grammar_question_bank.sql` (drops the separate Grammar Question Bank from 0011 — Grammar and Exam MCQs use the same `questions` table as before; only the Textbook/Chapter section has its own separately-tagged pool, via `questions.chapter_id`)
+   - `supabase/migrations/0013_any_chapter_grammar.sql` (chapter screen's "Grammar MCQs" = any chapter-tagged question across the whole Textbook section — still the same `questions` table, just a wider chapter_id filter than "Unit Test")
    - `supabase/seed.sql` (loads all exams + grammar categories/topics + 2 sample questions)
 
 3. In **Authentication → Users**, create the admin user (email + password),

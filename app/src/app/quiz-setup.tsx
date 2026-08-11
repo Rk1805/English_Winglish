@@ -8,11 +8,10 @@ import { Brand } from '@/lib/theme';
 
 /**
  * Topic / exam hub: entry points into the Textbook, Videos, the Question
- * Bank (revision list), and the timed/scored practice sets. All of these
- * pull from the same `questions` table used everywhere else — only the
- * Textbook/Chapter section has its own separately-uploaded pool (via
- * questions.chapter_id). The Grammar tab and exam PYQ flows use larger
- * counts (25/50/100/Random) than the Textbook section (10/15/25/Random).
+ * Bank (revision list), and the timed/scored practice sets — always scoped
+ * to the specific topic/exam the student tapped into. The Grammar tab and
+ * exam PYQ flows use larger counts (25/50/100/Random/Unlimited-200) than
+ * the Textbook section (10/15/25/Random/Unlimited).
  */
 export default function QuizSetupScreen() {
   const router = useRouter();
@@ -94,32 +93,18 @@ export default function QuizSetupScreen() {
         </Pressable>
       )}
 
-      {source === 'topic' ? (
-        <PracticeSets
-          heading={gu ? 'વ્યાકરણ MCQs' : 'Grammar MCQs'}
-          source="random"
-          id=""
-          title={gu ? 'વ્યાકરણ' : 'Grammar'}
-          variant="large"
-        />
-      ) : source === 'exam' || source === 'exam_topic' || source === 'exam_paper' ? (
-        <PracticeSets
-          heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}
-          source={source}
-          id={id ?? ''}
-          examId={examId}
-          title={title ?? ''}
-          variant="large"
-        />
-      ) : (
-        <PracticeSets
-          heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}
-          source={source}
-          id={id ?? ''}
-          examId={examId}
-          title={title ?? ''}
-        />
-      )}
+      {/* topic / exam / exam_topic / exam_paper / random (Random Practice)
+          all stay correctly scoped to their own id — only the counts
+          differ from the Textbook section (25/50/100/Random/Unlimited-200
+          here vs 10/15/25 there). */}
+      <PracticeSets
+        heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}
+        source={source}
+        id={id ?? ''}
+        examId={examId}
+        title={title ?? ''}
+        variant="large"
+      />
 
       <View style={styles.note}>
         <Ionicons name="information-circle-outline" size={16} color={Brand.textMuted} />

@@ -11,13 +11,15 @@ export type QuizPushSource =
   | 'exam_topic'
   | 'exam_paper'
   | 'chapter'
+  | 'chapter_any'
   | 'random';
 
 /**
  * The practice-set count picker — shared across the app. "small" (default)
- * = 10/15/25/Random/Unlimited, used inside a chapter (Unit Test and Grammar
- * MCQs both — the Textbook section's own counts). "large" =
- * 25/50/100/Random/Unlimited, used by the Grammar tab and exam PYQ flows.
+ * = 10/15/25/Random/Unlimited(all), used inside a chapter (Unit Test and
+ * Grammar MCQs both — the Textbook section's own counts). "large" =
+ * 25/50/100/Random/Unlimited(capped at 200), used by the Grammar tab, exam
+ * PYQ flows, and Random Practice.
  */
 export function PracticeSets({
   heading,
@@ -37,6 +39,7 @@ export function PracticeSets({
   const router = useRouter();
   const { gu } = useLanguage();
   const numbers = variant === 'large' ? [25, 50, 100] : [10, 15, 25];
+  const unlimitedCount = variant === 'large' ? '200' : 'all';
   const sets: { label: string; count: string; icon: 'help-circle' | 'shuffle' | 'infinite' }[] = [
     ...numbers.map((n) => ({
       label: gu ? `${n} પ્રશ્નો` : `${n} Questions`,
@@ -44,27 +47,30 @@ export function PracticeSets({
       icon: 'help-circle' as const,
     })),
     { label: gu ? 'રેન્ડમ' : 'Random', count: '20', icon: 'shuffle' },
-    { label: gu ? 'અમર્યાદિત પ્રેક્ટિસ' : 'Unlimited Practice', count: 'all', icon: 'infinite' },
+    { label: gu ? 'અમર્યાદિત પ્રેક્ટિસ' : 'Unlimited Practice', count: unlimitedCount, icon: 'infinite' },
   ];
 
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.heading}>{heading}</Text>
-      {sets.map((set) => (
-        <Pressable
-          key={set.label}
-          style={styles.card}
-          onPress={() =>
-            router.push({
-              pathname: '/quiz',
-              params: { source, id, examId: examId ?? '', title, count: set.count },
-            })
-          }>
-          <Ionicons name={set.icon} size={22} color={set.count === 'all' ? Brand.navy : Brand.red} />
-          <Text style={styles.cardTitle}>{set.label}</Text>
-          <Ionicons name="play-circle" size={30} color={set.count === 'all' ? Brand.navy : Brand.red} />
-        </Pressable>
-      ))}
+      {sets.map((set) => {
+        const isUnlimited = set.icon === 'infinite';
+        return (
+          <Pressable
+            key={set.label}
+            style={styles.card}
+            onPress={() =>
+              router.push({
+                pathname: '/quiz',
+                params: { source, id, examId: examId ?? '', title, count: set.count },
+              })
+            }>
+            <Ionicons name={set.icon} size={22} color={isUnlimited ? Brand.navy : Brand.red} />
+            <Text style={styles.cardTitle}>{set.label}</Text>
+            <Ionicons name="play-circle" size={30} color={isUnlimited ? Brand.navy : Brand.red} />
+          </Pressable>
+        );
+      })}
     </View>
   );
 }

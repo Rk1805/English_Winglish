@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { supabaseBrowser, type Exam, type Topic } from "@/lib/supabase";
+import { supabaseBrowser, type Chapter, type Exam, type Standard, type Topic } from "@/lib/supabase";
 import { PageHeader, primaryBtn, secondaryBtn } from "@/components/form-controls";
 
 /**
@@ -12,6 +12,11 @@ import { PageHeader, primaryBtn, secondaryBtn } from "@/components/form-controls
  * question_en | option_a | option_b | option_c | option_d | correct | explanation
  * | question_gu | option_a_gu | option_b_gu | option_c_gu | option_d_gu | explanation_gu
  * | topic | exam | year | difficulty | premium
+ *
+ * The "topic" column does double duty: it's checked against Grammar topic
+ * names first (e.g. "Synonyms"), and if nothing matches, against Textbook
+ * chapter names (e.g. "Unit 1 - Water & Environment") — so the same sheet
+ * format bulk-uploads either Grammar-tagged or Chapter-tagged questions.
  */
 
 type ParsedRow = {
@@ -46,6 +51,16 @@ const EXAMPLE_ROWS = [
     question_gu: "", option_a_gu: "", option_b_gu: "", option_c_gu: "", option_d_gu: "",
     explanation_gu: "",
     topic: "Tenses", exam: "", year: "", difficulty: "medium", premium: "no",
+  },
+  {
+    question_en: "Who is welcomed first in the poem 'Knock Knock'?",
+    option_a: "Dirty smoke", option_b: "Clean river", option_c: "Polluted air", option_d: "Dustbin",
+    correct: "B",
+    explanation: "Clean river is welcomed first in the poem.",
+    question_gu: "", option_a_gu: "", option_b_gu: "", option_c_gu: "", option_d_gu: "",
+    explanation_gu: "",
+    // Matches a Textbook chapter name exactly (Admin → Standards & Chapters).
+    topic: "Unit 1 - Water & Environment", exam: "", year: "", difficulty: "easy", premium: "no",
   },
 ];
 
@@ -82,9 +97,11 @@ export default function ImportQuestionsPage() {
     setFileName(file.name);
 
     const supabase = supabaseBrowser();
-    const [{ data: topics }, { data: exams }] = await Promise.all([
+    const [{ data: topics }, { data: exams }, { data: chapters }, { data: standards }] = await Promise.all([
       supabase.from("topics").select("*"),
       supabase.from("exams").select("*"),
+      supabase.from("chapters").select("*"),
+      supabase.from("standards").select("*"),
     ]);
     const topicByName = new Map(
       (topics ?? []).map((t: Topic) => [t.name_en.trim().toLowerCase(), t.id])
@@ -94,6 +111,14 @@ export default function ImportQuestionsPage() {
       examByName.set(exam.name_en.trim().toLowerCase(), exam.id);
       examByName.set(exam.slug.trim().toLowerCase(), exam.id);
     }
+    // Chapter names can collide across different standards, so keep every
+    // match and flag ambiguity per row rather than silently picking one.
+    const chapterByName = new Map<string, Chapter[]>();
+    for (const chapter of (chapters ?? []) as Chapter[]) {
+      const key = chapter.name_en.trim().toLowerCase();
+      chapterByName.set(key, [...(chapterByName.get(key) ?? []), chapter]);
+    }
+    const standardsById = new Map((standards ?? []).map((s: Standard) => [s.id, s]));
 
     let raw: Record<string, unknown>[];
     try {
@@ -126,9 +151,31 @@ export default function ImportQuestionsPage() {
       const correct_index = parseCorrect(row["correct"] ?? row["answer"]);
       if (correct_index === null) errors.push("correct must be A/B/C/D or 1-4");
 
-      const topicName = text("topic").toLowerCase();
-      const topic_id = topicName ? topicByName.get(topicName) : undefined;
-      if (topicName && !topic_id) errors.push(`unknown topic "${text("topic")}"`);
+      // "topic" matches a Grammar topic first, then falls back to a
+      // Textbook chapter name — same column, two possible destinations.
+      const topicText = text("topic");
+      const topicName = topicText.toLowerCase();
+      let topic_id: string | undefined;
+      let chapter_id: string | undefined;
+      if (topicName) {
+        topic_id = topicByName.get(topicName);
+        if (!topic_id) {
+          const matches = chapterByName.get(topicName) ?? [];
+          if (matches.length === 1) {
+            chapter_id = matches[0].id;
+          } else if (matches.length > 1) {
+            const where = matches
+              .map((c) => {
+                const std = standardsById.get(c.standard_id) as Standard | undefined;
+                return `Std ${std?.number ?? "?"} ${c.semester === "sem1" ? "Sem-I" : "Sem-II"}`;
+              })
+              .join(", ");
+            errors.push(`chapter name "${topicText}" is ambiguous (found in ${where}) — rename chapters to be unique`);
+          } else {
+            errors.push(`unknown topic or chapter "${topicText}"`);
+          }
+        }
+      }
 
       // exam column accepts multiple exams separated by commas: "GSSSB, Talati, TET"
       const examNames = text("exam").split(",").map((s) => s.trim()).filter(Boolean);
@@ -138,7 +185,8 @@ export default function ImportQuestionsPage() {
         if (!examId) errors.push(`unknown exam "${name}"`);
         else exam_ids.push(examId);
       }
-      if (!topic_id && exam_ids.length === 0) errors.push("need a topic or an exam (or both)");
+      if (!topic_id && !chapter_id && exam_ids.length === 0)
+        errors.push("need a topic, a chapter, or an exam (or a combination)");
 
       const difficultyRaw = text("difficulty").toLowerCase() || "medium";
       const difficulty = ["easy", "medium", "hard"].includes(difficultyRaw) ? difficultyRaw : null;
@@ -168,6 +216,7 @@ export default function ImportQuestionsPage() {
                 explanation_en: text("explanation") || text("explanation_en") || null,
                 explanation_gu: text("explanation_gu") || null,
                 topic_id: topic_id ?? null,
+                chapter_id: chapter_id ?? null,
                 exam_ids,
                 year,
                 difficulty,
@@ -214,9 +263,11 @@ export default function ImportQuestionsPage() {
         <p className="text-sm text-slate-900">
           <b>Step 1:</b> Download the template, fill one question per row (Excel or Google
           Sheets → save as .xlsx or .csv). Required: question, 4 options, correct answer
-          (A/B/C/D), and a topic or exam name exactly as it appears in the admin panel.
-          Multiple exams go in one cell separated by commas (e.g. &quot;GSSSB, Talati, TET&quot;).
-          Gujarati columns are optional.
+          (A/B/C/D). The <b>topic</b> column accepts either a Grammar topic name (e.g.
+          &quot;Synonyms&quot;) or a Textbook chapter name exactly as it appears in Admin →
+          Standards &amp; Chapters (e.g. &quot;Unit 1 - Water &amp; Environment&quot;) — it
+          checks Grammar topics first, then chapters. Multiple exams go in one cell separated
+          by commas (e.g. &quot;GSSSB, Talati, TET&quot;). Gujarati columns are optional.
         </p>
         <button className={secondaryBtn} onClick={downloadTemplate}>
           ⬇ Download template (.xlsx)
