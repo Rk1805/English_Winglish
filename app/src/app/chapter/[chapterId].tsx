@@ -76,7 +76,7 @@ export default function ChapterScreen() {
           />
           <PracticeSets
             heading={gu ? 'વ્યાકરણ MCQs' : 'Grammar MCQs'}
-            source="grammar_bank"
+            source="random"
             id=""
             title={gu ? 'વ્યાકરણ' : 'Grammar'}
           />

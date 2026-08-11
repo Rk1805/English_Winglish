@@ -11,15 +11,13 @@ export type QuizPushSource =
   | 'exam_topic'
   | 'exam_paper'
   | 'chapter'
-  | 'grammar_bank'
   | 'random';
 
 /**
- * The practice-set count picker — shared by the topic hub and the chapter
- * resource menu. "textbook" (default) = 10/15/25/Random/Unlimited, used for
- * chapter Unit Tests and chapter Grammar MCQs. "grammar" =
- * 25/50/100/Random/Unlimited, used only by the Grammar tab's single MCQ
- * section, so the two never look like the same picker.
+ * The practice-set count picker — shared across the app. "small" (default)
+ * = 10/15/25/Random/Unlimited, used inside a chapter (Unit Test and Grammar
+ * MCQs both — the Textbook section's own counts). "large" =
+ * 25/50/100/Random/Unlimited, used by the Grammar tab and exam PYQ flows.
  */
 export function PracticeSets({
   heading,
@@ -27,18 +25,18 @@ export function PracticeSets({
   id,
   examId,
   title,
-  variant = 'textbook',
+  variant = 'small',
 }: {
   heading: string;
   source: QuizPushSource;
   id: string;
   examId?: string;
   title: string;
-  variant?: 'textbook' | 'grammar';
+  variant?: 'small' | 'large';
 }) {
   const router = useRouter();
   const { gu } = useLanguage();
-  const numbers = variant === 'grammar' ? [25, 50, 100] : [10, 15, 25];
+  const numbers = variant === 'large' ? [25, 50, 100] : [10, 15, 25];
   const sets: { label: string; count: string; icon: 'help-circle' | 'shuffle' | 'infinite' }[] = [
     ...numbers.map((n) => ({
       label: gu ? `${n} પ્રશ્નો` : `${n} Questions`,

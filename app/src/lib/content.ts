@@ -241,14 +241,13 @@ export type QuizSource =
   | { kind: 'exam_topic'; examId: string; topicId: string }
   | { kind: 'exam_paper'; paperId: string }
   | { kind: 'chapter'; id: string }
-  | { kind: 'grammar_bank' }
   | { kind: 'random' };
 
 export async function fetchQuestions(source: QuizSource, limit?: number): Promise<Question[]> {
   const supabase = db();
   if (!supabase) {
-    // Papers/chapter/grammar_bank are Supabase-only features (not in the bundled sample set).
-    if (source.kind === 'exam_paper' || source.kind === 'chapter' || source.kind === 'grammar_bank') return [];
+    // Papers/chapter are Supabase-only features (not in the bundled sample set).
+    if (source.kind === 'exam_paper' || source.kind === 'chapter') return [];
     let all = sampleQuestions;
     if (source.kind === 'topic') all = all.filter((q) => q.topic_id === source.id);
     if (source.kind === 'exam') all = all.filter((q) => q.exam_ids.includes(source.id));
@@ -265,14 +264,6 @@ export async function fetchQuestions(source: QuizSource, limit?: number): Promis
   if (source.kind === 'exam_paper') {
     const { data, error } = await supabase.rpc('random_questions_by_paper', {
       p_paper_id: source.paperId,
-      p_limit: limit ?? null,
-    });
-    if (error) throw new Error(error.message);
-    return (data ?? []) as Question[];
-  }
-
-  if (source.kind === 'grammar_bank') {
-    const { data, error } = await supabase.rpc('random_grammar_questions', {
       p_limit: limit ?? null,
     });
     if (error) throw new Error(error.message);
@@ -318,13 +309,7 @@ export async function fetchExamPapers(examId: string): Promise<Paper[]> {
 export async function fetchQuestionBank(source: QuizSource): Promise<Question[]> {
   const supabase = db();
   if (!supabase) {
-    if (
-      source.kind === 'exam_paper' ||
-      source.kind === 'chapter' ||
-      source.kind === 'grammar_bank' ||
-      source.kind === 'random'
-    )
-      return [];
+    if (source.kind === 'exam_paper' || source.kind === 'chapter' || source.kind === 'random') return [];
     let all = sampleQuestions;
     if (source.kind === 'topic') all = all.filter((q) => q.topic_id === source.id);
     if (source.kind === 'exam') all = all.filter((q) => q.exam_ids.includes(source.id));
@@ -333,7 +318,7 @@ export async function fetchQuestionBank(source: QuizSource): Promise<Question[]>
     return all;
   }
 
-  if (source.kind === 'random' || source.kind === 'chapter' || source.kind === 'grammar_bank') return [];
+  if (source.kind === 'random' || source.kind === 'chapter') return [];
 
   if (source.kind === 'exam_paper') {
     const { data, error } = await supabase

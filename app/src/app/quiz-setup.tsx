@@ -8,10 +8,11 @@ import { Brand } from '@/lib/theme';
 
 /**
  * Topic / exam hub: entry points into the Textbook, Videos, the Question
- * Bank (revision list), and the timed/scored practice sets. A plain grammar
- * topic (source 'topic', reached from the Grammar tab) shows a single
- * "Grammar MCQs" section sourced from the dedicated Grammar Question Bank —
- * not this specific topic — since that bank is shared across every topic.
+ * Bank (revision list), and the timed/scored practice sets. All of these
+ * pull from the same `questions` table used everywhere else — only the
+ * Textbook/Chapter section has its own separately-uploaded pool (via
+ * questions.chapter_id). The Grammar tab and exam PYQ flows use larger
+ * counts (25/50/100/Random) than the Textbook section (10/15/25/Random).
  */
 export default function QuizSetupScreen() {
   const router = useRouter();
@@ -96,10 +97,19 @@ export default function QuizSetupScreen() {
       {source === 'topic' ? (
         <PracticeSets
           heading={gu ? 'વ્યાકરણ MCQs' : 'Grammar MCQs'}
-          source="grammar_bank"
+          source="random"
           id=""
           title={gu ? 'વ્યાકરણ' : 'Grammar'}
-          variant="grammar"
+          variant="large"
+        />
+      ) : source === 'exam' || source === 'exam_topic' || source === 'exam_paper' ? (
+        <PracticeSets
+          heading={gu ? 'પ્રેક્ટિસ સેટ પસંદ કરો' : 'Choose a practice set'}
+          source={source}
+          id={id ?? ''}
+          examId={examId}
+          title={title ?? ''}
+          variant="large"
         />
       ) : (
         <PracticeSets
