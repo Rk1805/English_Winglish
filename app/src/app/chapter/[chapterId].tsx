@@ -12,10 +12,8 @@ import { Brand } from '@/lib/theme';
 /**
  * Chapter resource menu (Textbook tab, step 4): Textbook opens the
  * chapter's PDF directly, Videos opens the chapter's tagged videos, and
- * MCQs splits into Unit (only this chapter's own tagged questions) and
- * Grammar (any chapter-tagged question across the whole Textbook section).
- * Both still come from the same `questions` table via chapter_id — no
- * separate pool, just a narrower vs. wider filter.
+ * MCQs is a single Unit Test — only this chapter's own tagged questions.
+ * The Textbook section has exactly one MCQ entry point per chapter.
  */
 export default function ChapterScreen() {
   const router = useRouter();
@@ -70,18 +68,7 @@ export default function ChapterScreen() {
             <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
           </Pressable>
 
-          <PracticeSets
-            heading={gu ? 'એકમ કસોટી (આ પ્રકરણ)' : 'Unit Test (this chapter)'}
-            source="chapter"
-            id={chapterId}
-            title={title ?? ''}
-          />
-          <PracticeSets
-            heading={gu ? 'વ્યાકરણ MCQs (આખું ટેક્સ્ટબુક)' : 'Grammar MCQs (whole Textbook)'}
-            source="chapter_any"
-            id=""
-            title={gu ? 'ટેક્સ્ટબુક વ્યાકરણ' : 'Textbook Grammar'}
-          />
+          <PracticeSets heading="MCQs" source="chapter" id={chapterId} title={title ?? ''} />
         </>
       )}
     </ScrollView>
