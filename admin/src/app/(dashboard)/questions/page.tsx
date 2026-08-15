@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabaseBrowser, type Question, type Topic, type Exam } from "@/lib/supabase";
+import { supabaseBrowser, type Question, type Topic, type Exam, type Standard, type Chapter } from "@/lib/supabase";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [standards, setStandards] = useState<Standard[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [topicFilter, setTopicFilter] = useState("");
   const [examFilter, setExamFilter] = useState("");
+  const [standardFilter, setStandardFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
@@ -18,24 +21,39 @@ export default function QuestionsPage() {
     const supabase = supabaseBrowser();
     supabase.from("topics").select("*").order("sort_order").then(({ data }) => setTopics(data ?? []));
     supabase.from("exams").select("*").order("sort_order").then(({ data }) => setExams(data ?? []));
+    supabase.from("standards").select("*").order("sort_order").then(({ data }) => setStandards(data ?? []));
+    supabase.from("chapters").select("*").order("sort_order").then(({ data }) => setChapters(data ?? []));
   }, []);
 
+  function chapterLabel(chapter: Chapter) {
+    const std = standards.find((s) => s.id === chapter.standard_id);
+    const sem = chapter.semester === "sem1" ? "Sem-I" : "Sem-II";
+    return `Std ${std?.number ?? "?"} ${sem}: ${chapter.name_en}`;
+  }
+
+  const standardChapterIds = useMemo(
+    () => chapters.filter((c) => c.standard_id === standardFilter).map((c) => c.id),
+    [chapters, standardFilter]
+  );
+
   useEffect(() => {
+    if (standardFilter && chapters.length === 0) return;
     const supabase = supabaseBrowser();
     setLoading(true);
     let q = supabase
       .from("questions")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(standardFilter ? 1000 : 100);
     if (topicFilter) q = q.eq("topic_id", topicFilter);
     if (examFilter) q = q.contains("exam_ids", [examFilter]);
+    if (standardFilter) q = q.in("chapter_id", standardChapterIds.length > 0 ? standardChapterIds : [""]);
     q.then(({ data }) => {
       setQuestions(data ?? []);
       setSelected(new Set());
       setLoading(false);
     });
-  }, [topicFilter, examFilter]);
+  }, [topicFilter, examFilter, standardFilter, chapters.length, standardChapterIds]);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -122,6 +140,16 @@ export default function QuestionsPage() {
             <option key={x.id} value={x.id}>{x.name_en}</option>
           ))}
         </select>
+        <select
+          value={standardFilter}
+          onChange={(e) => setStandardFilter(e.target.value)}
+          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">All standards (Textbook)</option>
+          {standards.map((s) => (
+            <option key={s.id} value={s.id}>Std {s.number}</option>
+          ))}
+        </select>
 
         {selected.size > 0 && (
           <div className="ml-auto flex items-center gap-3 rounded-md bg-red-50 px-3 py-2">
@@ -159,6 +187,7 @@ export default function QuestionsPage() {
               </th>
               <th className="px-4 py-3">Question</th>
               <th className="px-4 py-3">Topic</th>
+              <th className="px-4 py-3">Chapter</th>
               <th className="px-4 py-3">Exam / Year</th>
               <th className="px-4 py-3">Difficulty</th>
               <th className="px-4 py-3">Premium</th>
@@ -167,10 +196,10 @@ export default function QuestionsPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-900">Loading…</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-900">Loading…</td></tr>
             )}
             {!loading && questions.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-900">No questions found.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-900">No questions found.</td></tr>
             )}
             {questions.map((q) => (
               <tr key={q.id} className={`border-b border-slate-100 ${selected.has(q.id) ? "bg-red-50" : ""}`}>
@@ -184,6 +213,12 @@ export default function QuestionsPage() {
                 </td>
                 <td className="max-w-md px-4 py-3">{q.question_en}</td>
                 <td className="px-4 py-3">{topics.find((t) => t.id === q.topic_id)?.name_en ?? "—"}</td>
+                <td className="px-4 py-3">
+                  {(() => {
+                    const chapter = chapters.find((c) => c.id === q.chapter_id);
+                    return chapter ? chapterLabel(chapter) : "—";
+                  })()}
+                </td>
                 <td className="px-4 py-3">
                   {q.exam_ids.length > 0
                     ? q.exam_ids
