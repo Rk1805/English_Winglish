@@ -95,10 +95,16 @@ export default function StandardsPage() {
     };
     if (pdf_storage_path !== undefined) payload.pdf_storage_path = pdf_storage_path;
 
-    const { error } =
-      chapterEditing.chapterId === "new"
-        ? await supabase.from("chapters").insert(payload)
-        : await supabase.from("chapters").update(payload).eq("id", chapterEditing.chapterId);
+    let error;
+    if (chapterEditing.chapterId === "new") {
+      const siblingCount = chapters.filter(
+        (c) => c.standard_id === chapterEditing.standardId && c.semester === chapterForm.semester
+      ).length;
+      payload.sort_order = siblingCount;
+      ({ error } = await supabase.from("chapters").insert(payload));
+    } else {
+      ({ error } = await supabase.from("chapters").update(payload).eq("id", chapterEditing.chapterId));
+    }
     setBusy(false);
     if (error) return setError(error.message);
     setChapterEditing(null);
@@ -112,6 +118,20 @@ export default function StandardsPage() {
     const supabase = supabaseBrowser();
     if (chapter.pdf_storage_path) await supabase.storage.from("pdfs").remove([chapter.pdf_storage_path]);
     await supabase.from("chapters").delete().eq("id", chapter.id);
+    load();
+  }
+
+  async function moveChapter(standardId: string, semester: "sem1" | "sem2", chapterId: string, direction: -1 | 1) {
+    const group = chapters
+      .filter((c) => c.standard_id === standardId && c.semester === semester)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const index = group.findIndex((c) => c.id === chapterId);
+    const swapIndex = index + direction;
+    if (index === -1 || swapIndex < 0 || swapIndex >= group.length) return;
+    [group[index], group[swapIndex]] = [group[swapIndex], group[index]];
+
+    const supabase = supabaseBrowser();
+    await Promise.all(group.map((c, i) => supabase.from("chapters").update({ sort_order: i }).eq("id", c.id)));
     load();
   }
 
@@ -153,8 +173,25 @@ export default function StandardsPage() {
                       </h3>
                       {stdChapters
                         .filter((c) => c.semester === sem)
-                        .map((chapter) => (
+                        .sort((a, b) => a.sort_order - b.sort_order)
+                        .map((chapter, i, semChapters) => (
                           <div key={chapter.id} className="flex items-center gap-3 border-b border-slate-50 py-2">
+                            <div className="flex flex-col">
+                              <button
+                                className="leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+                                disabled={i === 0}
+                                title="Move up"
+                                onClick={() => moveChapter(standard.id, sem, chapter.id, -1)}>
+                                ▲
+                              </button>
+                              <button
+                                className="leading-none text-slate-500 hover:text-slate-900 disabled:opacity-25"
+                                disabled={i === semChapters.length - 1}
+                                title="Move down"
+                                onClick={() => moveChapter(standard.id, sem, chapter.id, 1)}>
+                                ▼
+                              </button>
+                            </div>
                             <span className="flex-1 text-sm">
                               {chapter.name_en}
                               {chapter.name_gu && <span className="ml-2 text-slate-900">{chapter.name_gu}</span>}
